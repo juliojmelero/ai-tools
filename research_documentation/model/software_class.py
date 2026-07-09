@@ -11,7 +11,7 @@ class SoftwareClass:
 
     module: str = ""
 
-    package: str = ""
+    package_name: str = ""
 
     bases: list[str] = field(default_factory=list)
 
