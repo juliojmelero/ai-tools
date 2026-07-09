@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from research_documentation.model.software_class import SoftwareClass
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class DependencyEdge:
     """
     Directed dependency edge between two software classes.
@@ -44,13 +44,11 @@ class DependencyGraph:
         software_class: SoftwareClass,
     ) -> list[SoftwareClass]:
 
-        dependencies = []
-
-        for edge in self.edges:
-            if edge.source is software_class:
-                dependencies.append(edge.target)
-
-        return dependencies
+        return [
+            edge.target
+            for edge in self.edges
+            if edge.source is software_class
+        ]
 
     @property
     def nodes(self) -> list[SoftwareClass]:
