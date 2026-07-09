@@ -18,6 +18,7 @@ class FileExtractor:
         self,
         file: Path,
         model: SoftwareModel,
+        package_name: str = "",
     ) -> None:
 
         source = file.read_text(
@@ -39,4 +40,5 @@ class FileExtractor:
             tree=tree,
             file=file,
             model=model,
+            package_name=package_name,
         )
