@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+from research_documentation.model.graph.dependency_graph import DependencyGraph
 from research_documentation.model.software_class import SoftwareClass
 from research_documentation.model.software_package import SoftwarePackage
 from research_documentation.model.software_relationship import SoftwareRelationship
@@ -22,6 +23,8 @@ class SoftwareModel:
     imports: dict[str, str] = field(default_factory=dict)
 
     module_imports: dict[str, dict[str, str]] = field(default_factory=dict)
+
+    dependency_graph: DependencyGraph = field(default_factory=DependencyGraph)
 
     def add_class(self, software_class: SoftwareClass) -> None:
         self.classes[software_class.name] = software_class
