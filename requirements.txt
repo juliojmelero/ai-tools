@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+requests
+tavily-python
+arxiv
+python-dotenv
+pydantic
+mcp
+httpx

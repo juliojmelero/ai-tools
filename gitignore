@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Conda
+conda-meta/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated documentation
+docs/**/*.svg
+docs/**/*.png
+docs/**/*.pdf
+
+# PlantUML cache
+*.puml.cache
+
+# Logs
+*.log
+
+# Temporary
+tmp/
+temp/
+
+# Local configuration
+.env
+.env.*
+
+# Ollama/OpenAI keys
+config/local.yaml

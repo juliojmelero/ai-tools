@@ -1,0 +1,30 @@
+@startuml
+actor User
+participant "Open WebUI" as UI
+participant "Search Engine" as SE
+participant "Query Planner" as QP
+participant "Provider Manager" as PM
+participant "Providers" as P
+participant "Deduplicator" as D
+participant "Fusion Engine" as F
+participant "Ranking Engine" as R
+database "Knowledge Base" as KB
+
+User -> UI: Submit query
+UI -> SE: search(query)
+SE -> QP: plan(query)
+QP --> SE: execution plan
+SE -> PM: execute(plan)
+PM -> P: parallel provider calls
+P --> PM: raw results
+PM --> SE: normalized results
+SE -> D: deduplicate(results)
+D --> SE: unique results
+SE -> F: merge metadata
+F --> SE: publications
+SE -> R: rank(publications)
+R --> SE: ranked publications
+SE -> KB: store/enrich
+SE --> UI: results
+UI --> User: display results
+@enduml

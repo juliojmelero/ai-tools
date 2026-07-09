@@ -1,0 +1,25 @@
+@startuml
+package "Research Engine" {
+  [Query Planner]
+  [Search Engine]
+  [Provider Manager]
+  [Deduplicator]
+  [Fusion Engine]
+  [Ranking Engine]
+  [Metadata Updater]
+  [Recommendation Engine]
+  [Semantic Search]
+  [Repository Layer]
+}
+
+[Query Planner] --> [Search Engine]
+[Search Engine] --> [Provider Manager]
+[Search Engine] --> [Deduplicator]
+[Deduplicator] --> [Fusion Engine]
+[Fusion Engine] --> [Ranking Engine]
+[Ranking Engine] --> [Repository Layer]
+[Metadata Updater] --> [Provider Manager]
+[Metadata Updater] --> [Fusion Engine]
+[Recommendation Engine] --> [Semantic Search]
+[Semantic Search] --> [Repository Layer]
+@enduml

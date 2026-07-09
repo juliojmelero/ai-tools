@@ -1,0 +1,29 @@
+@startuml
+node "User Browser" {
+  [Open WebUI Frontend]
+}
+
+node "Application Server" {
+  [Open WebUI Backend]
+  [Research MCP Server]
+  [Research Engine]
+  [Background Workers]
+}
+
+database "PostgreSQL" as PG
+database "Redis" as Redis
+database "Qdrant" as Qdrant
+cloud "External Providers" as Providers
+
+[Open WebUI Frontend] --> [Open WebUI Backend]
+[Open WebUI Backend] --> [Research MCP Server]
+[Research MCP Server] --> [Research Engine]
+[Research Engine] --> PG
+[Research Engine] --> Redis
+[Research Engine] --> Qdrant
+[Research Engine] --> Providers
+[Background Workers] --> PG
+[Background Workers] --> Redis
+[Background Workers] --> Qdrant
+[Background Workers] --> Providers
+@enduml

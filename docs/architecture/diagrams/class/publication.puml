@@ -1,0 +1,14 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title Publication
+
+class Placeholder {
+  +id: str
+}
+
+note right of Placeholder
+Publication is the central scientific entity.
+end note
+
+@enduml

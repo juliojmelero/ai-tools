@@ -1,0 +1,24 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title Publication Model
+
+class Publication {
+  - fields: dict
+}
+
+class FieldValue {
+  - selected: Any
+  - merge_strategy: str
+}
+
+class ProviderValue {
+  - provider: str
+  - value: Any
+  - timestamp: str
+}
+
+Publication "1" *-- "*" FieldValue : fields
+FieldValue "1" *-- "*" ProviderValue : values
+
+@enduml

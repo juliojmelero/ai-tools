@@ -1,0 +1,168 @@
+import os
+import time
+from datetime import datetime
+
+from tools.tavily_tool import search_web
+from tools.arxiv_tool import search_arxiv
+from tools.scopus_tool import search_scopus
+from tools.ieee_tool import search_ieee
+from tools.crossref_tool import search_crossref
+from tools.semantic_scholar_tool import search_semantic_scholar
+
+def health():
+    """
+    Comprueba el estado de todos los servicios externos.
+    """
+
+    result = {
+        "status": "ok",
+        "server": "Research MCP",
+        "version": "1.0.0",
+        "utc_time": datetime.utcnow().isoformat() + "Z",
+        "checks": {},
+        "latency_ms": {}
+    }
+
+    #
+    # Tavily
+    #
+
+    try:
+        t0 = time.perf_counter()
+
+        search_web(
+            query="ping",
+            max_results=1
+        )
+
+        result["checks"]["tavily"] = "ok"
+        result["latency_ms"]["tavily"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["tavily"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+
+    #
+    # arXiv
+    #
+
+    try:
+
+        t0 = time.perf_counter()
+
+        search_arxiv(
+            query="power systems",
+            max_results=1
+        )
+
+        result["checks"]["arxiv"] = "ok"
+        result["latency_ms"]["arxiv"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["arxiv"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+
+    #
+    # Scopus
+    #
+
+    try:
+
+        t0 = time.perf_counter()
+
+        search_scopus(
+            query="power systems",
+            count=1
+        )
+
+        result["checks"]["scopus"] = "ok"
+        result["latency_ms"]["scopus"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["scopus"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+
+    #
+    # IEEE Xplore
+    #
+
+    try:
+
+        t0 = time.perf_counter()
+
+        search_ieee(
+            query="power systems",
+            max_records=1
+        )
+
+        result["checks"]["ieee"] = "ok"
+        result["latency_ms"]["ieee"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["ieee"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+    #
+    # Crossref
+    #
+
+    try:
+
+        t0 = time.perf_counter()
+
+        search_crossref(
+            query="power systems",
+            rows=1
+        )
+
+        result["checks"]["crossref"] = "ok"
+        result["latency_ms"]["crossref"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["crossref"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+
+    #
+    # Semantic Scholar
+    #
+
+    try:
+
+        t0 = time.perf_counter()
+
+        search_semantic_scholar(
+            query="power systems",
+            limit=1
+        )
+
+        result["checks"]["semantic_scholar"] = "ok"
+        result["latency_ms"]["semantic_scholar"] = round(
+            (time.perf_counter() - t0) * 1000,
+            1
+        )
+
+    except Exception as e:
+
+        result["checks"]["semantic_scholar"] = f"ERROR: {e}"
+        result["status"] = "degraded"
+
+    return result

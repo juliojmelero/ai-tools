@@ -1,0 +1,39 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title research_models
+
+class FieldValue {
+  - selected: Any
+  - merge_strategy: str
+  - values: list[ProviderValue]
+  + add(provider: str, value: Any, quality: Optional[float]) -> Any
+  + contributors() -> Any
+  + selected_provider() -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+class ProviderValue {
+  - provider: str
+  - value: Any
+  - timestamp: str
+  - quality: Optional[float]
+  + create(cls: Any, provider: str, value: Any, quality: Optional[float]) -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+class Publication {
+  - fields: dict
+  + __post_init__() -> Any
+  + add(provider: Any, field_name: Any, value: Any, quality: Any) -> Any
+  + get(field_name: Any) -> Any
+  + contributors(field_name: Any) -> Any
+  + selected_provider(field_name: Any) -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+
+@enduml

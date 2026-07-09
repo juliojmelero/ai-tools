@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="415px" preserveAspectRatio="none" style="width:170px;height:415px;" version="1.1" viewBox="0 0 170 415" width="170px" zoomAndPan="magnify"><defs><filter height="300%" id="f1cfgj8bo7b59s" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="156" x="2" y="16.708">Publication Model</text><!--MD5=[bfaa0cf1c94f172be725c75ad56c3fba]
+class Publication--><rect fill="#FEFECE" filter="url(#f1cfgj8bo7b59s)" height="60.8047" id="Publication" style="stroke: #A80036; stroke-width: 1.5;" width="101" x="23.5" y="28.9531"/><ellipse cx="38.5" cy="44.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M41.4688,50.5938 Q40.8906,50.8906 40.25,51.0313 Q39.6094,51.1875 38.9063,51.1875 Q36.4063,51.1875 35.0781,49.5469 Q33.7656,47.8906 33.7656,44.7656 Q33.7656,41.6406 35.0781,39.9844 Q36.4063,38.3281 38.9063,38.3281 Q39.6094,38.3281 40.25,38.4844 Q40.9063,38.6406 41.4688,38.9375 L41.4688,41.6563 Q40.8438,41.0781 40.25,40.8125 Q39.6563,40.5313 39.0313,40.5313 Q37.6875,40.5313 37,41.6094 Q36.3125,42.6719 36.3125,44.7656 Q36.3125,46.8594 37,47.9375 Q37.6875,49 39.0313,49 Q39.6563,49 40.25,48.7344 Q40.8438,48.4531 41.4688,47.875 L41.4688,50.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="69" x="52.5" y="49.1074">Publication</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="24.5" x2="123.5" y1="60.9531" y2="60.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="63" x="29.5" y="75.1636">-fields: dict</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="24.5" x2="123.5" y1="81.7578" y2="81.7578"/><!--MD5=[c06cee2f39e206243f9de6f6690f87e9]
+class FieldValue--><rect fill="#FEFECE" filter="url(#f1cfgj8bo7b59s)" height="73.6094" id="FieldValue" style="stroke: #A80036; stroke-width: 1.5;" width="130" x="9" y="166.9531"/><ellipse cx="39.3" cy="182.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M42.2688,188.5938 Q41.6906,188.8906 41.05,189.0313 Q40.4094,189.1875 39.7063,189.1875 Q37.2063,189.1875 35.8781,187.5469 Q34.5656,185.8906 34.5656,182.7656 Q34.5656,179.6406 35.8781,177.9844 Q37.2063,176.3281 39.7063,176.3281 Q40.4094,176.3281 41.05,176.4844 Q41.7063,176.6406 42.2688,176.9375 L42.2688,179.6563 Q41.6438,179.0781 41.05,178.8125 Q40.4563,178.5313 39.8313,178.5313 Q38.4875,178.5313 37.8,179.6094 Q37.1125,180.6719 37.1125,182.7656 Q37.1125,184.8594 37.8,185.9375 Q38.4875,187 39.8313,187 Q40.4563,187 41.05,186.7344 Q41.6438,186.4531 42.2688,185.875 L42.2688,188.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="64" x="56.7" y="187.1074">FieldValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="10" x2="138" y1="198.9531" y2="198.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="80" x="15" y="213.1636">-selected: Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="118" x="15" y="225.9683">-merge_strategy: str</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="10" x2="138" y1="232.5625" y2="232.5625"/><!--MD5=[e0e2e0b347aefe305c2180ecbf609bf5]
+class ProviderValue--><rect fill="#FEFECE" filter="url(#f1cfgj8bo7b59s)" height="86.4141" id="ProviderValue" style="stroke: #A80036; stroke-width: 1.5;" width="118" x="15" y="317.9531"/><ellipse cx="30" cy="333.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M32.9688,339.5938 Q32.3906,339.8906 31.75,340.0313 Q31.1094,340.1875 30.4063,340.1875 Q27.9063,340.1875 26.5781,338.5469 Q25.2656,336.8906 25.2656,333.7656 Q25.2656,330.6406 26.5781,328.9844 Q27.9063,327.3281 30.4063,327.3281 Q31.1094,327.3281 31.75,327.4844 Q32.4063,327.6406 32.9688,327.9375 L32.9688,330.6563 Q32.3438,330.0781 31.75,329.8125 Q31.1563,329.5313 30.5313,329.5313 Q29.1875,329.5313 28.5,330.6094 Q27.8125,331.6719 27.8125,333.7656 Q27.8125,335.8594 28.5,336.9375 Q29.1875,338 30.5313,338 Q31.1563,338 31.75,337.7344 Q32.3438,337.4531 32.9688,336.875 L32.9688,339.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="86" x="44" y="338.1074">ProviderValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="16" x2="132" y1="349.9531" y2="349.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="75" x="21" y="364.1636">-provider: str</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="62" x="21" y="376.9683">-value: Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="89" x="21" y="389.7729">-timestamp: str</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="16" x2="132" y1="396.3672" y2="396.3672"/><!--MD5=[116cc7b4f992bc411aca26471248d6cc]
+reverse link Publication to FieldValue--><path d="M74,103.0431 C74,123.3831 74,147.4731 74,166.8931 " fill="none" id="Publication&lt;-FieldValue" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="74,89.9831,70,95.9831,74,101.9831,78,95.9831,74,89.9831" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="33" x="75" y="133.02">fields</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="8" x="65.175" y="109.9275">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="7" x="66.3547" y="155.7925">*</text><!--MD5=[eca2b9d3911da3c0760443913e458f10]
+reverse link FieldValue to ProviderValue--><path d="M74,254.5131 C74,274.9031 74,298.2631 74,317.8031 " fill="none" id="FieldValue&lt;-ProviderValue" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="74,241.2931,70,247.2931,74,253.2931,78,247.2931,74,241.2931" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="41" x="75" y="284.02">values</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="8" x="65.3625" y="260.5481">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="7" x="66.4422" y="306.7753">*</text><!--MD5=[a5a0be63a1915f58b4bab189606f09dc]
+@startuml
+skinparam classAttributeIconSize 0
+
+title Publication Model
+
+class Publication {
+  - fields: dict
+}
+
+class FieldValue {
+  - selected: Any
+  - merge_strategy: str
+}
+
+class ProviderValue {
+  - provider: str
+  - value: Any
+  - timestamp: str
+}
+
+Publication "1" *- - "*" FieldValue : fields
+FieldValue "1" *- - "*" ProviderValue : values
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 10:22:07 UTC 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 11.0.31+11-post-1ubuntu1-22.04.2-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: es
+Country: ES
+--></g></svg>

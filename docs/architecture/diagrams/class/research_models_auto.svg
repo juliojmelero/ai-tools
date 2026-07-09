@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="404px" preserveAspectRatio="none" style="width:849px;height:404px;" version="1.1" viewBox="0 0 849 404" width="849px" zoomAndPan="magnify"><defs><filter height="300%" id="f5hnxrvizpbxp" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="148" x="354.5" y="16.708">research_models</text><!--MD5=[c06cee2f39e206243f9de6f6690f87e9]
+class FieldValue--><rect fill="#FEFECE" filter="url(#f5hnxrvizpbxp)" height="150.4375" id="FieldValue" style="stroke: #A80036; stroke-width: 1.5;" width="361" x="39.5" y="28.9531"/><ellipse cx="183.75" cy="44.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M186.7188,50.5938 Q186.1406,50.8906 185.5,51.0313 Q184.8594,51.1875 184.1563,51.1875 Q181.6563,51.1875 180.3281,49.5469 Q179.0156,47.8906 179.0156,44.7656 Q179.0156,41.6406 180.3281,39.9844 Q181.6563,38.3281 184.1563,38.3281 Q184.8594,38.3281 185.5,38.4844 Q186.1563,38.6406 186.7188,38.9375 L186.7188,41.6563 Q186.0938,41.0781 185.5,40.8125 Q184.9063,40.5313 184.2813,40.5313 Q182.9375,40.5313 182.25,41.6094 Q181.5625,42.6719 181.5625,44.7656 Q181.5625,46.8594 182.25,47.9375 Q182.9375,49 184.2813,49 Q184.9063,49 185.5,48.7344 Q186.0938,48.4531 186.7188,47.875 L186.7188,50.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="64" x="204.25" y="49.1074">FieldValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="40.5" x2="399.5" y1="60.9531" y2="60.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="80" x="45.5" y="75.1636">-selected: Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="118" x="45.5" y="87.9683">-merge_strategy: str</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="152" x="45.5" y="100.7729">-values: list[ProviderValue]</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="40.5" x2="399.5" y1="107.3672" y2="107.3672"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="349" x="45.5" y="121.5776">+add(provider: str, value: Any, quality: Optional[float]) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="127" x="45.5" y="134.3823">+contributors() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="159" x="45.5" y="147.187">+selected_provider() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="95" x="45.5" y="159.9917">+to_dict() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="216" x="45.5" y="172.7964">+from_dict(cls: Any, data: Any) -&gt; Any</text><!--MD5=[e0e2e0b347aefe305c2180ecbf609bf5]
+class ProviderValue--><rect fill="#FEFECE" filter="url(#f5hnxrvizpbxp)" height="137.6328" id="ProviderValue" style="stroke: #A80036; stroke-width: 1.5;" width="428" x="6" y="255.9531"/><ellipse cx="172.75" cy="271.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M175.7188,277.5938 Q175.1406,277.8906 174.5,278.0313 Q173.8594,278.1875 173.1563,278.1875 Q170.6563,278.1875 169.3281,276.5469 Q168.0156,274.8906 168.0156,271.7656 Q168.0156,268.6406 169.3281,266.9844 Q170.6563,265.3281 173.1563,265.3281 Q173.8594,265.3281 174.5,265.4844 Q175.1563,265.6406 175.7188,265.9375 L175.7188,268.6563 Q175.0938,268.0781 174.5,267.8125 Q173.9063,267.5313 173.2813,267.5313 Q171.9375,267.5313 171.25,268.6094 Q170.5625,269.6719 170.5625,271.7656 Q170.5625,273.8594 171.25,274.9375 Q171.9375,276 173.2813,276 Q173.9063,276 174.5,275.7344 Q175.0938,275.4531 175.7188,274.875 L175.7188,277.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="86" x="193.25" y="276.1074">ProviderValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="7" x2="433" y1="287.9531" y2="287.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="75" x="12" y="302.1636">-provider: str</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="62" x="12" y="314.9683">-value: Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="89" x="12" y="327.7729">-timestamp: str</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="129" x="12" y="340.5776">-quality: Optional[float]</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="7" x2="433" y1="347.1719" y2="347.1719"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="416" x="12" y="361.3823">+create(cls: Any, provider: str, value: Any, quality: Optional[float]) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="95" x="12" y="374.187">+to_dict() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="216" x="12" y="386.9917">+from_dict(cls: Any, data: Any) -&gt; Any</text><!--MD5=[bfaa0cf1c94f172be725c75ad56c3fba]
+class Publication--><rect fill="#FEFECE" filter="url(#f5hnxrvizpbxp)" height="150.4375" id="Publication" style="stroke: #A80036; stroke-width: 1.5;" width="403" x="435.5" y="28.9531"/><ellipse cx="598.25" cy="44.9531" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M601.2188,50.5938 Q600.6406,50.8906 600,51.0313 Q599.3594,51.1875 598.6563,51.1875 Q596.1563,51.1875 594.8281,49.5469 Q593.5156,47.8906 593.5156,44.7656 Q593.5156,41.6406 594.8281,39.9844 Q596.1563,38.3281 598.6563,38.3281 Q599.3594,38.3281 600,38.4844 Q600.6563,38.6406 601.2188,38.9375 L601.2188,41.6563 Q600.5938,41.0781 600,40.8125 Q599.4063,40.5313 598.7813,40.5313 Q597.4375,40.5313 596.75,41.6094 Q596.0625,42.6719 596.0625,44.7656 Q596.0625,46.8594 596.75,47.9375 Q597.4375,49 598.7813,49 Q599.4063,49 600,48.7344 Q600.5938,48.4531 601.2188,47.875 L601.2188,50.5938 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="69" x="618.75" y="49.1074">Publication</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="436.5" x2="837.5" y1="60.9531" y2="60.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="63" x="441.5" y="75.1636">-fields: dict</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="436.5" x2="837.5" y1="81.7578" y2="81.7578"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="130" x="441.5" y="95.9683">+__post_init__() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="391" x="441.5" y="108.7729">+add(provider: Any, field_name: Any, value: Any, quality: Any) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="166" x="441.5" y="121.5776">+get(field_name: Any) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="217" x="441.5" y="134.3823">+contributors(field_name: Any) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="249" x="441.5" y="147.187">+selected_provider(field_name: Any) -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="95" x="441.5" y="159.9917">+to_dict() -&gt; Any</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="216" x="441.5" y="172.7964">+from_dict(cls: Any, data: Any) -&gt; Any</text><!--MD5=[eca2b9d3911da3c0760443913e458f10]
+reverse link FieldValue to ProviderValue--><path d="M220,192.1031 C220,213.2831 220,235.6331 220,255.7831 " fill="none" id="FieldValue&lt;-ProviderValue" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="220,179.0931,216,185.0931,220,191.0931,224,185.0931,220,179.0931" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="41" x="221" y="222.02">values</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="8" x="211.5875" y="199.6666">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="7" x="212.6391" y="244.9692">*</text><!--MD5=[18d9e8a7bfb52fc36c523260c0c3d1bb]
+@startuml
+skinparam classAttributeIconSize 0
+
+title research_models
+
+class FieldValue {
+  - selected: Any
+  - merge_strategy: str
+  - values: list[ProviderValue]
+  + add(provider: str, value: Any, quality: Optional[float]) -> Any
+  + contributors() -> Any
+  + selected_provider() -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+class ProviderValue {
+  - provider: str
+  - value: Any
+  - timestamp: str
+  - quality: Optional[float]
+  + create(cls: Any, provider: str, value: Any, quality: Optional[float]) -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+class Publication {
+  - fields: dict
+  + __post_init__() -> Any
+  + add(provider: Any, field_name: Any, value: Any, quality: Any) -> Any
+  + get(field_name: Any) -> Any
+  + contributors(field_name: Any) -> Any
+  + selected_provider(field_name: Any) -> Any
+  + to_dict() -> Any
+  + from_dict(cls: Any, data: Any) -> Any
+}
+
+FieldValue "1" *- - "*" ProviderValue : values
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 10:22:07 UTC 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 11.0.31+11-post-1ubuntu1-22.04.2-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: es
+Country: ES
+--></g></svg>

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-engine"
+version = "0.1.0"
+description = "Scientific Research Engine"
+requires-python = ">=3.11"
+
+authors = [
+    {name = "Julio"}
+]
+
+dependencies = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "research_engine*",
+    "research_models*",
+    "research_cache*",
+    "research_config*",
+    "tools*"
+]

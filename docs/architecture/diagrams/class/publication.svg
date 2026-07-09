@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="501px" preserveAspectRatio="none" style="width:267px;height:501px;" version="1.1" viewBox="0 0 267 501" width="267px" zoomAndPan="magnify"><defs><filter height="300%" id="f2tziruqbzbv0" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><!--MD5=[bfaa0cf1c94f172be725c75ad56c3fba]
+class Publication--><rect fill="#FEFECE" filter="url(#f2tziruqbzbv0)" height="124.8281" id="Publication" style="stroke: #A80036; stroke-width: 1.5;" width="250" x="6" y="8"/><ellipse cx="92.25" cy="24" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M95.2188,29.6406 Q94.6406,29.9375 94,30.0781 Q93.3594,30.2344 92.6563,30.2344 Q90.1563,30.2344 88.8281,28.5938 Q87.5156,26.9375 87.5156,23.8125 Q87.5156,20.6875 88.8281,19.0313 Q90.1563,17.375 92.6563,17.375 Q93.3594,17.375 94,17.5313 Q94.6563,17.6875 95.2188,17.9844 L95.2188,20.7031 Q94.5938,20.125 94,19.8594 Q93.4063,19.5781 92.7813,19.5781 Q91.4375,19.5781 90.75,20.6563 Q90.0625,21.7188 90.0625,23.8125 Q90.0625,25.9063 90.75,26.9844 Q91.4375,28.0469 92.7813,28.0469 Q93.4063,28.0469 94,27.7813 Q94.5938,27.5 95.2188,26.9219 L95.2188,29.6406 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="69" x="112.75" y="28.1543">Publication</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="7" x2="255" y1="40" y2="40"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="68" x="12" y="54.2104">+fields: dict</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="7" x2="255" y1="60.8047" y2="60.8047"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="238" x="12" y="75.0151">+add(provider, field_name, value, quality)</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="97" x="12" y="87.8198">+get(field_name)</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="148" x="12" y="100.6245">+contributors(field_name)</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="180" x="12" y="113.4292">+selected_provider(field_name)</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="54" x="12" y="126.2339">+to_dict()</text><!--MD5=[c06cee2f39e206243f9de6f6690f87e9]
+class FieldValue--><rect fill="#FEFECE" filter="url(#f2tziruqbzbv0)" height="124.8281" id="FieldValue" style="stroke: #A80036; stroke-width: 1.5;" width="180" x="41" y="193"/><ellipse cx="94.75" cy="209" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M97.7188,214.6406 Q97.1406,214.9375 96.5,215.0781 Q95.8594,215.2344 95.1563,215.2344 Q92.6563,215.2344 91.3281,213.5938 Q90.0156,211.9375 90.0156,208.8125 Q90.0156,205.6875 91.3281,204.0313 Q92.6563,202.375 95.1563,202.375 Q95.8594,202.375 96.5,202.5313 Q97.1563,202.6875 97.7188,202.9844 L97.7188,205.7031 Q97.0938,205.125 96.5,204.8594 Q95.9063,204.5781 95.2813,204.5781 Q93.9375,204.5781 93.25,205.6563 Q92.5625,206.7188 92.5625,208.8125 Q92.5625,210.9063 93.25,211.9844 Q93.9375,213.0469 95.2813,213.0469 Q95.9063,213.0469 96.5,212.7813 Q97.0938,212.5 97.7188,211.9219 L97.7188,214.6406 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="64" x="115.25" y="213.1543">FieldValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="42" x2="220" y1="225" y2="225"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="57" x="47" y="239.2104">+selected</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="99" x="47" y="252.0151">+merge_strategy</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="46" x="47" y="264.8198">+values</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="42" x2="220" y1="271.4141" y2="271.4141"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="168" x="47" y="285.6245">+add(provider, value, quality)</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="86" x="47" y="298.4292">+contributors()</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="118" x="47" y="311.2339">+selected_provider()</text><!--MD5=[e0e2e0b347aefe305c2180ecbf609bf5]
+class ProviderValue--><rect fill="#FEFECE" filter="url(#f2tziruqbzbv0)" height="112.0234" id="ProviderValue" style="stroke: #A80036; stroke-width: 1.5;" width="118" x="72" y="378"/><ellipse cx="87" cy="394" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M89.9688,399.6406 Q89.3906,399.9375 88.75,400.0781 Q88.1094,400.2344 87.4063,400.2344 Q84.9063,400.2344 83.5781,398.5938 Q82.2656,396.9375 82.2656,393.8125 Q82.2656,390.6875 83.5781,389.0313 Q84.9063,387.375 87.4063,387.375 Q88.1094,387.375 88.75,387.5313 Q89.4063,387.6875 89.9688,387.9844 L89.9688,390.7031 Q89.3438,390.125 88.75,389.8594 Q88.1563,389.5781 87.5313,389.5781 Q86.1875,389.5781 85.5,390.6563 Q84.8125,391.7188 84.8125,393.8125 Q84.8125,395.9063 85.5,396.9844 Q86.1875,398.0469 87.5313,398.0469 Q88.1563,398.0469 88.75,397.7813 Q89.3438,397.5 89.9688,396.9219 L89.9688,399.6406 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="86" x="101" y="398.1543">ProviderValue</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="73" x2="189" y1="410" y2="410"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="56" x="78" y="424.2104">+provider</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="39" x="78" y="437.0151">+value</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="70" x="78" y="449.8198">+timestamp</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="46" x="78" y="462.6245">+quality</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="73" x2="189" y1="469.2188" y2="469.2188"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="54" x="78" y="483.4292">+to_dict()</text><!--MD5=[116cc7b4f992bc411aca26471248d6cc]
+reverse link Publication to FieldValue--><path d="M131,146.5 C131,161.88 131,177.91 131,192.76 " fill="none" id="Publication&lt;-FieldValue" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="131,133.2,127,139.2,131,145.2,135,139.2,131,133.2" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="8" x="122.5625" y="152.9617">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="36" x="92.9188" y="181.723">many</text><!--MD5=[eca2b9d3911da3c0760443913e458f10]
+reverse link FieldValue to ProviderValue--><path d="M131,331.65 C131,347.13 131,363.17 131,377.79 " fill="none" id="FieldValue&lt;-ProviderValue" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="131,318.23,127,324.23,131,330.23,135,324.23,131,318.23" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="8" x="122.5625" y="337.995">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="36" x="92.8063" y="367.0989">many</text><!--MD5=[d271aa86b0cef6f4effe3184272b19aa]
+@startuml
+skinparam classAttributeIconSize 0
+
+class Publication {
+  +fields: dict
+  +add(provider, field_name, value, quality)
+  +get(field_name)
+  +contributors(field_name)
+  +selected_provider(field_name)
+  +to_dict()
+}
+
+class FieldValue {
+  +selected
+  +merge_strategy
+  +values
+  +add(provider, value, quality)
+  +contributors()
+  +selected_provider()
+}
+
+class ProviderValue {
+  +provider
+  +value
+  +timestamp
+  +quality
+  +to_dict()
+}
+
+Publication "1" *- - "many" FieldValue
+FieldValue "1" *- - "many" ProviderValue
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 10:22:07 UTC 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 11.0.31+11-post-1ubuntu1-22.04.2-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: es
+Country: ES
+--></g></svg>
