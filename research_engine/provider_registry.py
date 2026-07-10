@@ -36,6 +36,14 @@ class ProviderRegistry:
 
         return self._providers[provider_id]
 
+    def get_optional(self, provider_id):
+
+        return self._providers.get(provider_id)
+
+    def contains(self, provider_id):
+
+        return provider_id in self._providers
+
     def list(self):
 
         return list(self._providers.values())
@@ -46,6 +54,14 @@ _registry = ProviderRegistry()
 
 def get_provider(provider_id):
     return _registry.get(provider_id)
+
+
+def get_provider_optional(provider_id):
+    return _registry.get_optional(provider_id)
+
+
+def get_registry():
+    return _registry
 
 
 def list_providers():
