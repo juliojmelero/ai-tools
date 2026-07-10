@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from types import MappingProxyType
 
 from research_engine.deduplicator import Deduplicator
+from research_engine.fusion_engine import FusionEngine
 from research_engine.provider_manager import ProviderManager
 from research_engine.provider_registry import get_registry
 from research_engine.query_planner import QueryPlanner
@@ -30,6 +31,7 @@ class SearchEngine:
         query_planner=None,
         executor=None,
         deduplicator=None,
+        fusion_engine: FusionEngine | None = None,
         ranker=None,
     ):
         self.pm = provider_manager or ProviderManager()
@@ -37,6 +39,7 @@ class SearchEngine:
         self.query_planner = query_planner or QueryPlanner()
         self.executor = executor or SearchExecutor()
         self.deduplicator = deduplicator or Deduplicator()
+        self.fusion_engine = fusion_engine or FusionEngine()
         self.ranker = ranker or Ranker()
 
     def search(
@@ -69,10 +72,16 @@ class SearchEngine:
             if outcome.status is ProviderStatus.SUCCESS
             for record in outcome.records
         ]
+        clusters = self.deduplicator.cluster(raw_records)
+        fused = []
+        for records in clusters.values():
+            publication = None
+            for record in records:
+                publication = self.fusion_engine.merge(publication, record)
+            fused.append(publication)
 
-        deduplicated = self.deduplicator.deduplicate(raw_records)
         rank_sort_mode = "score" if request.sort_mode == "relevance" else request.sort_mode
-        ranked = self.ranker.rank(deduplicated, sort_mode=rank_sort_mode)
+        ranked = self.ranker.rank(fused, sort_mode=rank_sort_mode)
         publications = tuple(ranked[:request.max_results])
 
         successful = self._providers_with_status(outcomes, ProviderStatus.SUCCESS)
@@ -104,7 +113,7 @@ class SearchEngine:
             sort_mode=request.sort_mode,
             errors=errors,
             planned_queries=planned_queries,
-            duplicates_removed=len(raw_records) - len(deduplicated),
+            duplicates_removed=len(raw_records) - len(clusters),
         )
 
     def search_all(
@@ -134,8 +143,6 @@ class SearchEngine:
         if request.providers is not None:
             return request.providers
 
-        # ProviderManager reads configuration ordered by provider id, which is the
-        # documented stable default order for enabled-provider searches.
         return tuple(provider["id"] for provider in self.pm.list_enabled())
 
     def _prepare_provider_request(

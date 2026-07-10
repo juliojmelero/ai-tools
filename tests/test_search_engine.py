@@ -96,7 +96,7 @@ def test_one_explicit_provider_uses_executor_pipeline():
 
     assert len(executor.batches) == 1
     assert [item.provider_id for item in executor.batches[0]] == ["crossref"]
-    assert result.publications[0]["provider"] == "crossref"
+    assert result.publications[0]["_providers"] == ["crossref"]
 
 
 def test_several_explicit_providers_preserve_caller_order():
@@ -243,7 +243,7 @@ def test_provider_and_record_order_are_deterministic():
     )
 
     assert [o.provider_id for o in result.provider_outcomes] == ["second", "first"]
-    assert [p["title"] for p in result.publications] == ["b", "a", "c"]
+    assert [p["title"] for p in result.publications] == ["a", "b", "c"]
 
 
 def test_one_and_multiple_providers_use_the_same_executor():
