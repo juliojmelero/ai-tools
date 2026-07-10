@@ -1,51 +1,111 @@
-from research_engine.provider_manager import ProviderManager
-from research_engine.provider_registry import get_provider, list_providers
+from __future__ import annotations
+
+import warnings
+from collections.abc import Sequence
+from types import MappingProxyType
+
 from research_engine.deduplicator import Deduplicator
-from research_engine.ranking import Ranker
+from research_engine.provider_manager import ProviderManager
+from research_engine.provider_registry import get_registry
 from research_engine.query_planner import QueryPlanner
+from research_engine.ranking import Ranker
+from research_engine.search_executor import SearchExecutor
+from research_engine.search_models import (
+    ProviderExecutionError,
+    ProviderOutcome,
+    ProviderRequest,
+    ProviderStatus,
+    SearchRequest,
+    SearchResult,
+)
 
 
 class SearchEngine:
+    """Public facade for the scientific search pipeline."""
 
-    def __init__(self):
-        self.pm = ProviderManager()
-        self.deduplicator = Deduplicator()
-        self.ranker = Ranker()
-        self.query_planner = QueryPlanner()
+    def __init__(
+        self,
+        provider_manager=None,
+        provider_registry=None,
+        query_planner=None,
+        executor=None,
+        deduplicator=None,
+        ranker=None,
+    ):
+        self.pm = provider_manager or ProviderManager()
+        self.registry = provider_registry or get_registry()
+        self.query_planner = query_planner or QueryPlanner()
+        self.executor = executor or SearchExecutor()
+        self.deduplicator = deduplicator or Deduplicator()
+        self.ranker = ranker or Ranker()
 
     def search(
         self,
-        provider: str,
         query: str,
-        max_results: int = 10,
+        providers: Sequence[str] | None = None,
+        max_results: int = 20,
         from_year: int | None = None,
         until_year: int | None = None,
-    ):
-        if not self.pm.exists(provider):
-            raise ValueError(f"Unknown provider: {provider}")
-
-        if not self.pm.enabled(provider):
-            raise RuntimeError(f"Provider '{provider}' is disabled")
-
-        planned_query = self.query_planner.plan(
+        sort_mode: str = "relevance",
+    ) -> SearchResult:
+        request = SearchRequest(
             query=query,
-            provider=provider,
-        )
-
-        engine = get_provider(provider)
-
-        response = engine.search(
-            query=planned_query,
+            providers=None if providers is None else tuple(providers),
             max_results=max_results,
             from_year=from_year,
             until_year=until_year,
+            sort_mode=sort_mode,
         )
+        selected = self._select_providers(request)
+        provider_requests = tuple(
+            self._prepare_provider_request(request, provider_id, ordinal)
+            for ordinal, provider_id in enumerate(selected)
+        )
+        outcomes = self.executor.execute(provider_requests)
 
-        if isinstance(response, dict):
-            response["original_query"] = query
-            response["planned_query"] = planned_query
+        raw_records = [
+            dict(record)
+            for outcome in outcomes
+            if outcome.status is ProviderStatus.SUCCESS
+            for record in outcome.records
+        ]
 
-        return response
+        deduplicated = self.deduplicator.deduplicate(raw_records)
+        rank_sort_mode = "score" if request.sort_mode == "relevance" else request.sort_mode
+        ranked = self.ranker.rank(deduplicated, sort_mode=rank_sort_mode)
+        publications = tuple(ranked[:request.max_results])
+
+        successful = self._providers_with_status(outcomes, ProviderStatus.SUCCESS)
+        failed = self._providers_with_status(outcomes, ProviderStatus.FAILED)
+        timed_out = self._providers_with_status(outcomes, ProviderStatus.TIMED_OUT)
+        cancelled = self._providers_with_status(outcomes, ProviderStatus.CANCELLED)
+        errors = MappingProxyType({
+            outcome.provider_id: outcome.error.message
+            for outcome in outcomes
+            if outcome.error is not None
+        })
+        planned_queries = MappingProxyType({
+            outcome.provider_id: outcome.planned_query
+            for outcome in outcomes
+        })
+
+        return SearchResult(
+            query=request.query,
+            providers=selected,
+            publications=publications,
+            provider_outcomes=outcomes,
+            successful_providers=successful,
+            failed_providers=failed,
+            timed_out_providers=timed_out,
+            cancelled_providers=cancelled,
+            partial=bool(successful and (failed or timed_out or cancelled)),
+            raw_count=len(raw_records),
+            final_count=len(publications),
+            sort_mode=request.sort_mode,
+            errors=errors,
+            planned_queries=planned_queries,
+            duplicates_removed=len(raw_records) - len(deduplicated),
+        )
 
     def search_all(
         self,
@@ -53,51 +113,92 @@ class SearchEngine:
         max_results: int = 20,
         from_year: int | None = None,
         until_year: int | None = None,
-        providers: list[str] | None = None,
+        providers: Sequence[str] | None = None,
         sort_mode: str = "score",
-    ):
-        selected = providers or [
-            p.id
-            for p in list_providers()
-            if self.pm.enabled(p.id)
-        ]
+    ) -> SearchResult:
+        warnings.warn(
+            "SearchEngine.search_all() is deprecated; use SearchEngine.search()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.search(
+            query=query,
+            providers=providers,
+            max_results=max_results,
+            from_year=from_year,
+            until_year=until_year,
+            sort_mode=sort_mode,
+        )
 
-        raw_results = []
-        errors = {}
-        planned_queries = {}
+    def _select_providers(self, request: SearchRequest) -> tuple[str, ...]:
+        if request.providers is not None:
+            return request.providers
 
-        per_provider = max_results
+        # ProviderManager reads configuration ordered by provider id, which is the
+        # documented stable default order for enabled-provider searches.
+        return tuple(provider["id"] for provider in self.pm.list_enabled())
 
-        for provider_id in selected:
+    def _prepare_provider_request(
+        self,
+        request: SearchRequest,
+        provider_id: str,
+        ordinal: int,
+    ) -> ProviderRequest:
+        implementation = self.registry.get_optional(provider_id)
+        configuration = self.pm.get(provider_id)
+        error = None
+        planned_query = request.query
+
+        if configuration is None:
+            error = ProviderExecutionError(
+                code="unknown_provider",
+                message=f"Unknown provider: {provider_id}",
+                error_type="ProviderConfigurationError",
+            )
+        elif not configuration.get("enabled"):
+            error = ProviderExecutionError(
+                code="provider_disabled",
+                message=f"Provider '{provider_id}' is disabled",
+                error_type="ProviderDisabledError",
+            )
+        elif implementation is None:
+            error = ProviderExecutionError(
+                code="provider_implementation_unavailable",
+                message=f"Provider implementation is unavailable: {provider_id}",
+                error_type="ProviderImplementationError",
+            )
+        else:
             try:
-                response = self.search(
+                planned_query = self.query_planner.plan(
+                    query=request.query,
                     provider=provider_id,
-                    query=query,
-                    max_results=per_provider,
-                    from_year=from_year,
-                    until_year=until_year,
+                )
+            except Exception as exc:
+                error = ProviderExecutionError(
+                    code="query_planning_failed",
+                    message=str(exc) or type(exc).__name__,
+                    error_type=type(exc).__name__,
                 )
 
-                if isinstance(response, dict):
-                    planned_queries[provider_id] = response.get("planned_query")
-                    raw_results.extend(response.get("results", []))
-                else:
-                    errors[provider_id] = "Provider returned non-dict response"
+        return ProviderRequest(
+            provider_id=provider_id,
+            original_query=request.query,
+            planned_query=planned_query,
+            max_results=request.max_results,
+            from_year=request.from_year,
+            until_year=request.until_year,
+            ordinal=ordinal,
+            provider=implementation,
+            preparation_error=error,
+        )
 
-            except Exception as e:
-                errors[provider_id] = str(e)
-
-        deduplicated = self.deduplicator.deduplicate(raw_results)
-        ranked = self.ranker.rank(deduplicated, sort_mode=sort_mode)
-
-        return {
-            "query": query,
-            "planned_queries": planned_queries,
-            "providers": selected,
-            "sort_mode": sort_mode,
-            "raw_count": len(raw_results),
-            "duplicates_removed": len(raw_results) - len(deduplicated),
-            "count": min(len(ranked), max_results),
-            "errors": errors,
-            "results": ranked[:max_results],
-        }
+    @staticmethod
+    def _providers_with_status(
+        outcomes: tuple[ProviderOutcome, ...],
+        status: ProviderStatus,
+    ) -> tuple[str, ...]:
+        return tuple(
+            outcome.provider_id
+            for outcome in outcomes
+            if outcome.status is status
+        )
