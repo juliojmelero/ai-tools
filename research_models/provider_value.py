@@ -9,6 +9,7 @@ class ProviderValue:
     value: Any
     timestamp: str
     quality: Optional[float] = None
+    current: bool = False
 
     @classmethod
     def create(
@@ -16,12 +17,13 @@ class ProviderValue:
         provider: str,
         value: Any,
         quality: Optional[float] = None,
+        timestamp: Optional[str] = None,
     ):
         return cls(
             provider=provider,
             value=value,
             quality=quality,
-            timestamp=datetime.utcnow().isoformat() + "Z",
+            timestamp=timestamp or datetime.utcnow().isoformat() + "Z",
         )
 
     def to_dict(self):

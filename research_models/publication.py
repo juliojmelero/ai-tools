@@ -24,7 +24,7 @@ class Publication:
                 )
             self.fields[field_name].reselect(providers_for_field(field_name))
 
-    def add(self, provider, field_name, value, quality=None):
+    def add(self, provider, field_name, value, quality=None, timestamp=None):
         if field_name not in FIELD_RULES:
             raise UnknownPublicationFieldError(
                 f"Unknown canonical publication field: {field_name!r}"
@@ -34,6 +34,7 @@ class Publication:
             provider=provider,
             value=value,
             quality=quality,
+            timestamp=timestamp,
             provider_order=providers_for_field(field_name),
         )
 
