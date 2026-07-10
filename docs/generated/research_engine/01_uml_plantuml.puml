@@ -1,0 +1,85 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+title research_engine
+
+class BaseProvider {
+  + search(query: str, max_results: int, from_year: int | None, until_year: int | None) -> Any
+  + is_enabled(provider_manager: Any) -> Any
+  + api_key(provider_manager: Any) -> Any
+}
+
+class Deduplicator {
+  + deduplicate(publications: Any) -> Any
+}
+
+class FusionEngine {
+  + _dict_to_publication(data: Any) -> Any
+  + _publication_to_flat_dict(pub: Any) -> Any
+  + merge(existing: Any, new: Any) -> Any
+}
+
+class MergeStrategies {
+  + first_non_empty(old: Any, new: Any) -> Any
+  + longest(old: Any, new: Any) -> Any
+  + maximum(old: Any, new: Any) -> Any
+  + union(old: Any, new: Any) -> Any
+  + overwrite(old: Any, new: Any) -> Any
+}
+
+class ProviderManager {
+  + list() -> Any
+  + list_enabled() -> Any
+  + get(provider_id: Any) -> Any
+  + exists(provider_id: Any) -> Any
+  + enabled(provider_id: Any) -> Any
+  + api_key(provider_id: Any) -> Any
+}
+
+class ProviderRegistry {
+  + __init__() -> Any
+  + _discover() -> Any
+  + get(provider_id: Any) -> Any
+  + list() -> Any
+}
+
+class CrossrefProvider {
+  + search(query: str, max_results: int, from_year: int | None, until_year: int | None) -> dict
+}
+
+class DummyProvider {
+  + search(query: Any, max_results: Any, from_year: Any, until_year: Any) -> Any
+}
+
+class OpenAlexProvider {
+  + search(query: str, max_results: int, from_year: int | None, until_year: int | None) -> dict
+}
+
+class ScopusProvider {
+  + search(query: str, max_results: int, from_year: int | None, until_year: int | None) -> dict
+}
+
+class QueryPlanner {
+  + plan(query: str, provider: str) -> str
+  + _tokenize(text: Any) -> Any
+  + _scopus(query: Any) -> Any
+  + _ieee(query: Any) -> Any
+}
+
+class Ranker {
+  + score(publication: Any) -> Any
+  + rank(publications: Any, sort_mode: Any) -> Any
+}
+
+class SearchEngine {
+  + __init__() -> Any
+  + search(provider: str, query: str, max_results: int, from_year: int | None, until_year: int | None) -> Any
+  + search_all(query: str, max_results: int, from_year: int | None, until_year: int | None, providers: list[str] | None, sort_mode: str) -> Any
+}
+
+CrossrefProvider "1" --|> "1" BaseProvider
+DummyProvider "1" --|> "1" BaseProvider
+OpenAlexProvider "1" --|> "1" BaseProvider
+ScopusProvider "1" --|> "1" BaseProvider
+
+@enduml
