@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from dataclasses import replace
 from threading import Lock
 from time import monotonic, sleep
@@ -20,6 +20,10 @@ from research_engine.search_models import (
     ProviderOutcome,
     ProviderRequest,
     ProviderStatus,
+)
+from research_engine.search_executor_pool import (
+    SearchExecutorPool,
+    get_search_executor_pool,
 )
 
 
@@ -148,6 +152,7 @@ class SearchExecutor:
         jitter_strategy: Callable[[float, float, int], float] | None = None,
         error_classifier: ErrorClassifier | None = None,
         rate_limiter_registry: RateLimiterRegistry | None = None,
+        executor_pool: SearchExecutorPool | None = None,
     ):
         if policy is not None and max_workers is not None:
             raise TypeError("provide either policy or max_workers, not both")
@@ -168,6 +173,11 @@ class SearchExecutor:
         self._rate_limiter_registry = (
             rate_limiter_registry or get_rate_limiter_registry()
         )
+        if executor_pool is not None and not isinstance(
+            executor_pool, SearchExecutorPool
+        ):
+            raise TypeError("executor_pool must be a SearchExecutorPool")
+        self._executor_pool = executor_pool or get_search_executor_pool()
 
     @property
     def max_workers(self) -> int:
@@ -198,53 +208,47 @@ class SearchExecutor:
         if len(states) != len(prepared):
             raise ValueError("provider request ordinals must be unique")
 
-        effective_workers = min(self.max_workers, len(prepared))
-        executor = ThreadPoolExecutor(max_workers=effective_workers)
+        executor = self._executor_pool.get(self.max_workers)
         future_requests: dict[Future[ProviderOutcome], ProviderRequest] = {
             executor.submit(self._execute_one, request, states[request.ordinal]): request
             for request in prepared
         }
         outcomes: dict[int, ProviderOutcome] = {}
         pending = set(future_requests)
-        try:
-            while pending:
-                nearest_expiry = min(
-                    future_requests[future].deadline.expires_at
+        while pending:
+            nearest_expiry = min(
+                future_requests[future].deadline.expires_at
+                for future in pending
+            )
+            done, _ = wait(
+                pending,
+                timeout=max(0.0, nearest_expiry - self._clock()),
+                return_when=FIRST_COMPLETED,
+            )
+
+            for future in done:
+                request = future_requests[future]
+                outcomes[request.ordinal] = future.result()
+                pending.remove(future)
+
+            now = self._clock()
+            expired = sorted(
+                (
+                    future
                     for future in pending
+                    if future_requests[future].deadline.expires_at <= now
+                ),
+                key=lambda future: future_requests[future].ordinal,
+            )
+            for future in expired:
+                request = future_requests[future]
+                state = states[request.ordinal]
+                state.time_out(now, self._timeout_error(request))
+                future.cancel()
+                outcomes[request.ordinal] = self._outcome_from_state(
+                    request, state, started
                 )
-                done, _ = wait(
-                    pending,
-                    timeout=max(0.0, nearest_expiry - self._clock()),
-                    return_when=FIRST_COMPLETED,
-                )
-
-                for future in done:
-                    request = future_requests[future]
-                    outcomes[request.ordinal] = future.result()
-                    pending.remove(future)
-
-                now = self._clock()
-                expired = sorted(
-                    (
-                        future
-                        for future in pending
-                        if future_requests[future].deadline.expires_at <= now
-                    ),
-                    key=lambda future: future_requests[future].ordinal,
-                )
-                for future in expired:
-                    request = future_requests[future]
-                    state = states[request.ordinal]
-                    state.time_out(now, self._timeout_error(request))
-                    future.cancel()
-                    outcomes[request.ordinal] = self._outcome_from_state(
-                        request, state, started
-                    )
-                    pending.remove(future)
-        finally:
-            # ThreadPoolExecutor cannot forcibly terminate running blocking calls.
-            # They may finish in the background, while queued calls are cancelled.
-            executor.shutdown(wait=False, cancel_futures=True)
+                pending.remove(future)
 
         return tuple(outcomes[request.ordinal] for request in prepared)
 
