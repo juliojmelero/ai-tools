@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timezone
 from email.utils import parsedate_to_datetime
+from inspect import Signature, signature
 from math import isfinite
 from time import time
 from typing import Callable
@@ -33,12 +34,13 @@ class ErrorClassifier:
         )
         code = "provider_transient_failure" if retryable else "provider_execution_failed"
         if status is not None:
-            code = "provider_http_error"
+            code = f"provider_http_{status}"
         error = ProviderExecutionError(
             code=code,
             message=str(exc) or type(exc).__name__,
             error_type=type(exc).__name__,
             retryable=retryable,
+            http_status=status,
         )
         return RetryDecision(
             retryable=retryable,
@@ -93,13 +95,51 @@ class ErrorClassifier:
                 return None
         return seconds if isfinite(seconds) and seconds >= 0 else None
 
-    @staticmethod
-    def _http_status(exc: Exception) -> int | None:
-        for candidate in (
-            getattr(exc, "status_code", None),
-            getattr(exc, "status", None),
-            getattr(getattr(exc, "response", None), "status_code", None),
-        ):
-            if isinstance(candidate, int) and not isinstance(candidate, bool):
-                return candidate
+    @classmethod
+    def _http_status(cls, exc: Exception) -> int | None:
+        names = ("status_code", "http_status", "status", "code")
+        for name in names:
+            status = cls._status_value(exc, name)
+            if status is not None:
+                return status
+
+        response = cls._safe_attribute(exc, "response")
+        for name in ("status_code", "status", "code"):
+            status = cls._status_value(response, name)
+            if status is not None:
+                return status
         return None
+
+    @classmethod
+    def _status_value(cls, owner: object, name: str) -> int | None:
+        candidate = cls._safe_attribute(owner, name)
+        if callable(candidate):
+            try:
+                accessor_signature: Signature = signature(candidate)
+                accessor_signature.bind()
+            except (TypeError, ValueError):
+                return None
+            try:
+                candidate = candidate()
+            except Exception:
+                return None
+
+        if isinstance(candidate, bool):
+            return None
+        if isinstance(candidate, int):
+            status = candidate
+        elif isinstance(candidate, str):
+            stripped = candidate.strip()
+            if not stripped.isdecimal():
+                return None
+            status = int(stripped)
+        else:
+            return None
+        return status if 100 <= status <= 599 else None
+
+    @staticmethod
+    def _safe_attribute(owner: object, name: str) -> object | None:
+        try:
+            return getattr(owner, name, None)
+        except Exception:
+            return None
