@@ -8,6 +8,10 @@ from time import monotonic, sleep
 from typing import Any, Callable
 
 from research_engine.error_classifier import ErrorClassifier
+from research_engine.rate_limiter import (
+    RateLimiterRegistry,
+    get_rate_limiter_registry,
+)
 from research_engine.search_models import (
     ExecutionPolicy,
     ProviderDeadline,
@@ -125,6 +129,11 @@ class _ProviderExecutionState:
         with self._lock:
             return self._terminal_status, self._attempts
 
+    def is_set(self) -> bool:
+        """Return whether this request has reached a terminal state."""
+        with self._lock:
+            return self._terminal_status is not None
+
 
 class SearchExecutor:
     """Bounded concurrent executor with one terminal outcome per request."""
@@ -138,6 +147,7 @@ class SearchExecutor:
         sleeper: Callable[[float], None] = sleep,
         jitter_strategy: Callable[[float, float, int], float] | None = None,
         error_classifier: ErrorClassifier | None = None,
+        rate_limiter_registry: RateLimiterRegistry | None = None,
     ):
         if policy is not None and max_workers is not None:
             raise TypeError("provide either policy or max_workers, not both")
@@ -150,6 +160,14 @@ class SearchExecutor:
         self._sleep = sleeper
         self._jitter_strategy = jitter_strategy or self._zero_jitter
         self._error_classifier = error_classifier or ErrorClassifier()
+        if (
+            rate_limiter_registry is not None
+            and not isinstance(rate_limiter_registry, RateLimiterRegistry)
+        ):
+            raise TypeError("rate_limiter_registry must be a RateLimiterRegistry")
+        self._rate_limiter_registry = (
+            rate_limiter_registry or get_rate_limiter_registry()
+        )
 
     @property
     def max_workers(self) -> int:
@@ -274,6 +292,24 @@ class SearchExecutor:
                 retry_policy.minimum_attempt_budget,
             ):
                 state.time_out(attempt_started, self._timeout_error(request))
+                return self._outcome_from_state(request, state, started)
+
+            provider_policies = self.policy.provider_rate_limit_policies
+            rate_limit_policy = provider_policies.get(
+                request.provider_id,
+                self.policy.default_rate_limit_policy,
+            )
+            limiter = self._rate_limiter_registry.get(
+                request.provider_id,
+                rate_limit_policy,
+            )
+            if limiter is not None and not limiter.acquire(request.deadline, state):
+                state.time_out(self._clock(), self._timeout_error(request))
+                return self._outcome_from_state(request, state, started)
+
+            now = self._clock()
+            if state.is_set() or now >= request.deadline.expires_at:
+                state.time_out(now, self._timeout_error(request))
                 return self._outcome_from_state(request, state, started)
             try:
                 response = request.provider.search(
