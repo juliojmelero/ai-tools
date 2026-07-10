@@ -86,10 +86,71 @@ class ProviderExecutionError:
 
 
 @dataclass(frozen=True, slots=True)
+class RetryPolicy:
+    max_attempts: int = 3
+    initial_backoff: float = 0.1
+    backoff_multiplier: float = 2.0
+    max_backoff: float = 5.0
+    jitter: float = 0.0
+    minimum_attempt_budget: float = 0.001
+    retryable_statuses: frozenset[int] = frozenset({408, 429, 500, 502, 503, 504})
+    retryable_exception_types: tuple[type[Exception], ...] = (
+        ConnectionError,
+        TimeoutError,
+    )
+
+    def __post_init__(self) -> None:
+        if isinstance(self.max_attempts, bool) or not isinstance(self.max_attempts, int):
+            raise TypeError("max_attempts must be an integer")
+        if self.max_attempts <= 0:
+            raise ValueError("max_attempts must be greater than 0")
+        for name in (
+            "initial_backoff", "max_backoff", "jitter", "minimum_attempt_budget"
+        ):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(f"{name} must be a number")
+            if value < 0:
+                raise ValueError(f"{name} must be greater than or equal to 0")
+        if (
+            isinstance(self.backoff_multiplier, bool)
+            or not isinstance(self.backoff_multiplier, (int, float))
+        ):
+            raise TypeError("backoff_multiplier must be a number")
+        if self.backoff_multiplier <= 0:
+            raise ValueError("backoff_multiplier must be greater than 0")
+        if not all(isinstance(status, int) for status in self.retryable_statuses):
+            raise TypeError("retryable_statuses must contain integers")
+        if not all(
+            isinstance(exception_type, type)
+            and issubclass(exception_type, Exception)
+            for exception_type in self.retryable_exception_types
+        ):
+            raise TypeError("retryable_exception_types must contain exception types")
+        object.__setattr__(self, "retryable_statuses", frozenset(self.retryable_statuses))
+        object.__setattr__(
+            self, "retryable_exception_types", tuple(self.retryable_exception_types)
+        )
+        if self.minimum_attempt_budget <= 0:
+            raise ValueError("minimum_attempt_budget must be greater than 0")
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderAttempt:
+    attempt_number: int
+    started_at: float
+    elapsed_ms: int
+    status: ProviderStatus
+    error: ProviderExecutionError | None = None
+    scheduled_backoff: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ExecutionPolicy:
     default_provider_timeout: float = 30.0
     overall_timeout: float | None = None
     max_workers: int = 8
+    retry_policy: RetryPolicy = RetryPolicy()
 
     def __post_init__(self) -> None:
         if (
@@ -111,6 +172,8 @@ class ExecutionPolicy:
             raise TypeError("max_workers must be an integer")
         if self.max_workers <= 0:
             raise ValueError("max_workers must be greater than 0")
+        if not isinstance(self.retry_policy, RetryPolicy):
+            raise TypeError("retry_policy must be a RetryPolicy")
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +209,19 @@ class ProviderOutcome:
     error: ProviderExecutionError | None
     ordinal: int
     deadline: ProviderDeadline | None = None
+    attempts: tuple[ProviderAttempt, ...] = ()
+
+    @property
+    def attempt_history(self) -> tuple[ProviderAttempt, ...]:
+        return self.attempts
+
+    @property
+    def final_error(self) -> ProviderExecutionError | None:
+        return self.error
+
+    @property
+    def final_status(self) -> ProviderStatus:
+        return self.status
 
     @property
     def successful(self) -> bool:
