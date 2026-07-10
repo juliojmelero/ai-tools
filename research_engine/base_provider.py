@@ -20,7 +20,7 @@ class BaseProvider(ABC):
         until_year: int | None = None,
     ):
         """
-        Devuelve una lista de Publication.
+        Devuelve resultados con el esquema canónico ProviderResult.
         """
         raise NotImplementedError
 
