@@ -4,7 +4,7 @@ from dataclasses import field
 from typing import Any
 
 from research_models.provider_value import ProviderValue
-from research_engine.merge_strategies import STRATEGIES
+from research_engine.merge_strategies import select
 
 
 @dataclass
@@ -12,8 +12,15 @@ class FieldValue:
     selected: Any = None
     merge_strategy: str = "first_non_empty"
     values: list[ProviderValue] = field(default_factory=list)
+    _selected_provider: Optional[str] = field(default=None, init=False, repr=False)
 
-    def add(self, provider: str, value: Any, quality: Optional[float] = None):
+    def add(
+        self,
+        provider: str,
+        value: Any,
+        quality: Optional[float] = None,
+        provider_order=(),
+    ):
         if value in (None, "", [], {}):
             return
 
@@ -24,23 +31,20 @@ class FieldValue:
         )
 
         self.values.append(pv)
+        self.reselect(provider_order)
 
-        strategy = STRATEGIES.get(self.merge_strategy)
-
-        if strategy is None:
-            self.selected = value
-            return
-
-        self.selected = strategy(self.selected, value)
+    def reselect(self, provider_order=()):
+        self.selected, self._selected_provider = select(
+            self.merge_strategy,
+            self.values,
+            provider_order,
+        )
 
     def contributors(self):
         return sorted({v.provider for v in self.values})
 
     def selected_provider(self):
-        for v in reversed(self.values):
-            if v.value == self.selected:
-                return v.provider
-        return None
+        return self._selected_provider
 
     def to_dict(self):
         return {

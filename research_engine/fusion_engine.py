@@ -1,10 +1,24 @@
-from research_models.publication import Publication
+from research_models.publication import Publication, UnknownPublicationFieldError
 from research_engine.provider_priorities import FIELD_RULES
 
 
 class FusionEngine:
 
+    _METADATA_FIELDS = {"provider", "_providers", "_record"}
+
+    def _validate_fields(self, data):
+        unknown = set(data) - set(FIELD_RULES) - self._METADATA_FIELDS
+        if unknown:
+            fields = ", ".join(sorted(unknown))
+            raise UnknownPublicationFieldError(
+                f"Unknown publication field(s): {fields}"
+            )
+
     def _dict_to_publication(self, data):
+        self._validate_fields(data)
+        if "_record" in data:
+            return Publication.from_dict(data["_record"])
+
         pub = Publication()
 
         provider = data.get("provider")
@@ -27,6 +41,7 @@ class FusionEngine:
         }
 
     def merge(self, existing, new):
+        self._validate_fields(new)
         if existing is None:
             pub = self._dict_to_publication(new)
         else:
