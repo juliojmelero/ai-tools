@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from time import monotonic
 from typing import Any
 
@@ -17,10 +18,24 @@ class InvalidProviderResponse(ValueError):
 
 
 class SearchExecutor:
-    """Sequential provider executor with one terminal outcome per request."""
+    """Bounded concurrent executor with one terminal outcome per request."""
+
+    def __init__(self, max_workers: int = 8):
+        if isinstance(max_workers, bool) or not isinstance(max_workers, int):
+            raise TypeError("max_workers must be an integer")
+        if max_workers <= 0:
+            raise ValueError("max_workers must be greater than 0")
+        self.max_workers = max_workers
 
     def execute(self, requests: Sequence[ProviderRequest]) -> tuple[ProviderOutcome, ...]:
-        return tuple(self._execute_one(request) for request in requests)
+        requests = tuple(requests)
+        if not requests:
+            return ()
+
+        effective_workers = min(self.max_workers, len(requests))
+        with ThreadPoolExecutor(max_workers=effective_workers) as executor:
+            futures = [executor.submit(self._execute_one, request) for request in requests]
+            return tuple(future.result() for future in futures)
 
     def _execute_one(self, request: ProviderRequest) -> ProviderOutcome:
         started = monotonic()
