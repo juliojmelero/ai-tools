@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import json
 from typing import Any, Optional
 
@@ -13,6 +13,17 @@ class FieldValue:
     merge_strategy: str = "first_non_empty"
     values: list[ProviderValue] = field(default_factory=list)
     _selected_provider: Optional[str] = field(default=None, init=False, repr=False)
+
+    def __post_init__(self):
+        self._validate_values()
+
+    def _validate_values(self):
+        for observation in self.values:
+            if not isinstance(observation, ProviderValue):
+                raise TypeError(
+                    "FieldValue values must contain only ProviderValue observations"
+                )
+            observation.validate_quality()
 
     def add(
         self,
@@ -76,6 +87,7 @@ class FieldValue:
 
     def current_values(self):
         """Return exactly one current (latest) observation per provider."""
+        self._validate_values()
         # Canonical ordering makes the duplicate rule independent of arrival:
         # within an exactly identical group, historical copies precede one
         # current representative. Since those copies have identical complete
@@ -86,11 +98,12 @@ class FieldValue:
         for observation in self.values:
             latest[observation.provider] = observation
 
-        for observation in self.values:
-            observation.current = False
-        for observation in latest.values():
-            observation.current = True
-        return list(latest.values())
+        current_ids = {id(observation) for observation in latest.values()}
+        self.values = [
+            replace(observation, current=id(observation) in current_ids)
+            for observation in self.values
+        ]
+        return [observation for observation in self.values if observation.current]
 
     def contributors(self):
         return sorted({v.provider for v in self.values})
@@ -99,6 +112,7 @@ class FieldValue:
         return self._selected_provider
 
     def to_dict(self):
+        self._validate_values()
         self.current_values()
         return {
             "selected": self.selected,
@@ -118,5 +132,6 @@ class FieldValue:
             ProviderValue.from_dict(v)
             for v in data.get("values", [])
         ]
+        obj._validate_values()
         obj.current_values()
         return obj

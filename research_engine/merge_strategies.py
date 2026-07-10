@@ -20,20 +20,45 @@ def _ordered_values(values, provider_order):
     )
 
 
+def _quality_key(quality):
+    """Sort numeric qualities before None, with higher scores first."""
+    return (quality is None, 0.0 if quality is None else -quality)
+
+
+def _rank_by_provider_and_quality(item, provider_order):
+    priorities = {name: index for index, name in enumerate(provider_order)}
+    return (
+        priorities.get(item.provider, len(priorities)),
+        _quality_key(item.quality),
+        "" if item.provider is None else str(item.provider),
+    )
+
+
 def first_non_empty(values, provider_order):
-    chosen = _ordered_values(values, provider_order)[0]
+    chosen = min(
+        values,
+        key=lambda item: _rank_by_provider_and_quality(item, provider_order),
+    )
     return chosen.value, chosen.provider
 
 
 def longest(values, provider_order):
-    ordered = _ordered_values(values, provider_order)
-    chosen = max(ordered, key=lambda item: len(item.value))
+    longest_length = max(len(item.value) for item in values)
+    candidates = [item for item in values if len(item.value) == longest_length]
+    chosen = min(
+        candidates,
+        key=lambda item: _rank_by_provider_and_quality(item, provider_order),
+    )
     return chosen.value, chosen.provider
 
 
 def maximum(values, provider_order):
-    ordered = _ordered_values(values, provider_order)
-    chosen = max(ordered, key=lambda item: item.value)
+    maximum_value = max(item.value for item in values)
+    candidates = [item for item in values if item.value == maximum_value]
+    chosen = min(
+        candidates,
+        key=lambda item: _rank_by_provider_and_quality(item, provider_order),
+    )
     return chosen.value, chosen.provider
 
 
@@ -47,7 +72,10 @@ def union(values, provider_order):
 
 
 def overwrite(values, provider_order):
-    chosen = _ordered_values(values, provider_order)[0]
+    chosen = min(
+        values,
+        key=lambda item: _rank_by_provider_and_quality(item, provider_order),
+    )
     return chosen.value, chosen.provider
 
 

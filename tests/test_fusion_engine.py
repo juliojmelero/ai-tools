@@ -1,11 +1,15 @@
 import itertools
+from dataclasses import FrozenInstanceError
 
 import pytest
 
 from research_engine.fusion_engine import FusionEngine
-from research_engine.merge_strategies import FusionConfigurationError
+from research_engine.merge_strategies import FusionConfigurationError, select
 from research_models.field_value import FieldValue
-from research_models.provider_value import ProviderValue
+from research_models.provider_value import (
+    InvalidProviderValueQualityError,
+    ProviderValue,
+)
 from research_models.publication import Publication
 
 
@@ -163,6 +167,152 @@ def test_overwrite_uses_provider_priority_instead_of_arrival_order():
 
     assert field.selected == "crossref value"
     assert field.selected_provider() == "crossref"
+
+
+@pytest.mark.parametrize("quality", [0.0, 1.0])
+def test_quality_boundary_values_are_valid(quality):
+    value = ProviderValue.create("crossref", "title", quality=quality)
+
+    assert value.quality == quality
+
+
+@pytest.mark.parametrize(
+    "quality", [float("nan"), float("inf"), float("-inf"), True, False, -0.1, 1.1]
+)
+def test_invalid_quality_is_a_domain_error(quality):
+    with pytest.raises(
+        InvalidProviderValueQualityError,
+        match="quality must be None or a finite numeric value between 0.0 and 1.0",
+    ):
+        ProviderValue.create("crossref", "title", quality=quality)
+
+
+def test_provider_value_quality_cannot_be_mutated_after_construction():
+    value = ProviderValue.create("crossref", "title", quality=0.5)
+
+    with pytest.raises(FrozenInstanceError):
+        value.quality = float("nan")
+
+
+def _forge_invalid_quality(value):
+    object.__setattr__(value, "quality", float("nan"))
+    return value
+
+
+def test_field_value_rejects_invalid_prebuilt_provider_value():
+    invalid = _forge_invalid_quality(
+        ProviderValue.create("crossref", "title", quality=0.5)
+    )
+
+    with pytest.raises(InvalidProviderValueQualityError):
+        FieldValue(values=[invalid])
+
+
+def test_serialization_rejects_forged_invalid_observation():
+    field = FieldValue()
+    field.add("crossref", "title", quality=0.5)
+    _forge_invalid_quality(field.values[0])
+
+    with pytest.raises(InvalidProviderValueQualityError):
+        field.to_dict()
+
+
+@pytest.mark.parametrize("strategy", ["first_non_empty", "overwrite"])
+def test_provider_priority_precedes_quality(strategy):
+    field = FieldValue(merge_strategy=strategy)
+    provider_order = ["crossref", "openalex"]
+    field.add(
+        "openalex", "high quality", quality=1.0, provider_order=provider_order
+    )
+    field.add(
+        "crossref", "low quality", quality=0.0, provider_order=provider_order
+    )
+
+    assert field.selected == "low quality"
+
+
+@pytest.mark.parametrize("strategy", ["first_non_empty", "overwrite"])
+def test_equal_provider_priority_prefers_numeric_and_higher_quality(strategy):
+    values = [
+        ProviderValue.create("zeta", "none", quality=None),
+        ProviderValue.create("alpha", "lower", quality=0.2),
+        ProviderValue.create("omega", "higher", quality=0.8),
+    ]
+
+    selected, provider = select(strategy, values, [])
+
+    assert (selected, provider) == ("higher", "omega")
+
+
+def test_equal_longest_values_use_quality_after_provider_priority():
+    values = [
+        ProviderValue.create("alpha", "alpha", quality=None),
+        ProviderValue.create("bravo", "bravo", quality=0.0),
+        ProviderValue.create("delta", "delta", quality=1.0),
+    ]
+
+    assert select("longest", values, [])[0] == "delta"
+
+
+def test_equal_maximum_values_use_quality_after_provider_priority():
+    values = [
+        ProviderValue.create("alpha", 10, quality=0.2),
+        ProviderValue.create("omega", 10, quality=0.9),
+    ]
+
+    assert select("maximum", values, []) == (10, "omega")
+
+
+def test_quality_aware_selection_is_permutation_independent():
+    observations = [
+        ("alpha", "alpha", 0.1),
+        ("bravo", "bravo", None),
+        ("delta", "delta", 0.9),
+    ]
+    results = set()
+    for permutation in itertools.permutations(observations):
+        field = FieldValue(merge_strategy="first_non_empty")
+        for provider, value, quality in permutation:
+            field.add(provider, value, quality=quality)
+        results.add(field.selected)
+
+    assert results == {"delta"}
+
+
+def test_serialization_reload_preserves_quality_aware_selection_and_history():
+    field = FieldValue(merge_strategy="overwrite")
+    field.values = [
+        ProviderValue.create("alpha", "none", quality=None),
+        ProviderValue.create("omega", "best", quality=1.0),
+    ]
+    field.reselect([])
+
+    reloaded = FieldValue.from_dict(field.to_dict())
+    reloaded.reselect([])
+
+    assert reloaded.selected == "best"
+    assert [value.quality for value in reloaded.values] == [None, 1.0]
+
+
+def test_union_quality_does_not_reorder_or_discard_duplicate_provenance():
+    field = FieldValue(merge_strategy="union")
+    provider_order = ["crossref", "openalex"]
+    field.add(
+        "openalex",
+        ["shared", "openalex"],
+        quality=1.0,
+        provider_order=provider_order,
+    )
+    field.add(
+        "crossref",
+        ["crossref", "shared"],
+        quality=0.0,
+        provider_order=provider_order,
+    )
+
+    assert field.selected == ["crossref", "shared", "openalex"]
+    assert field.contributors() == ["crossref", "openalex"]
+    assert len(field.values) == 2
 
 
 def test_unknown_strategy_is_a_configuration_error():
