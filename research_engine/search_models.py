@@ -86,6 +86,7 @@ class ProviderExecutionError:
     message: str
     error_type: str
     retryable: bool = False
+    http_status: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
