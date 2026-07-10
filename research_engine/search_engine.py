@@ -4,6 +4,10 @@ from research_engine.deduplicator import Deduplicator
 from research_engine.fusion_engine import FusionEngine
 from research_engine.ranking import Ranker
 from research_engine.query_planner import QueryPlanner
+from research_models.provider_value import (
+    InvalidProviderIdentifierError,
+    normalize_provider_identifier,
+)
 
 
 class SearchEngine:
@@ -82,7 +86,26 @@ class SearchEngine:
 
                 if isinstance(response, dict):
                     planned_queries[provider_id] = response.get("planned_query")
-                    raw_results.extend(response.get("results", []))
+                    results = response.get("results", [])
+                    envelope_provider = response.get("provider")
+                    try:
+                        envelope_provider = normalize_provider_identifier(
+                            envelope_provider
+                        )
+                    except InvalidProviderIdentifierError:
+                        envelope_provider = None
+
+                    for result in results:
+                        if not isinstance(result, dict):
+                            continue
+                        try:
+                            result["provider"] = normalize_provider_identifier(
+                                result.get("provider")
+                            )
+                        except InvalidProviderIdentifierError:
+                            if envelope_provider is not None:
+                                result["provider"] = envelope_provider
+                    raw_results.extend(results)
                 else:
                     errors[provider_id] = "Provider returned non-dict response"
 

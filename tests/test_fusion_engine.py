@@ -7,7 +7,9 @@ from research_engine.fusion_engine import FusionEngine
 from research_engine.merge_strategies import FusionConfigurationError, select
 from research_models.field_value import FieldValue
 from research_models.provider_value import (
+    InvalidProviderIdentifierError,
     InvalidProviderValueQualityError,
+    InvalidProviderValueTimestampError,
     ProviderValue,
 )
 from research_models.publication import Publication
@@ -121,7 +123,6 @@ def test_reversing_provider_input_keeps_scalar_and_union_selection():
             "authors": ["Crossref Author", "Shared Author"],
         },
     ]
-
     forward = _fuse(records)
     reverse = _fuse(reversed(records))
 
@@ -322,9 +323,145 @@ def test_unknown_strategy_is_a_configuration_error():
         field.add("crossref", "value")
 
 
-def test_unknown_fields_are_rejected():
-    with pytest.raises(ValueError, match="Unknown publication field.*year"):
-        FusionEngine().merge(None, {"provider": "crossref", "year": 2024})
+def test_unknown_provider_metadata_is_ignored():
+    merged = FusionEngine().merge(
+        None,
+        {"provider": "crossref", "title": "Title", "source_score": 99},
+    )
+
+    assert "source_score" not in merged
+    assert merged["title"] == "Title"
+
+
+def test_flat_provider_quality_is_propagated_to_every_field():
+    merged = FusionEngine().merge(
+        None,
+        {"provider": "crossref", "quality": 0.87, "title": "Title", "doi": "doi"},
+    )
+
+    assert merged["_record"]["title"]["values"][0]["quality"] == 0.87
+    assert merged["_record"]["doi"]["values"][0]["quality"] == 0.87
+
+
+def test_flat_provider_without_quality_preserves_none():
+    merged = FusionEngine().merge(None, {"provider": "crossref", "title": "Title"})
+
+    assert merged["_record"]["title"]["values"][0]["quality"] is None
+
+
+@pytest.mark.parametrize("provider", [None, "", "   "])
+def test_flat_record_requires_valid_provider(provider):
+    with pytest.raises(InvalidProviderIdentifierError):
+        FusionEngine().merge(None, {"provider": provider, "title": "Title"})
+
+
+@pytest.mark.parametrize("provider", [None, "", "   "])
+def test_direct_provider_value_rejects_invalid_provider(provider):
+    with pytest.raises(InvalidProviderIdentifierError):
+        ProviderValue(provider=provider, value="Title")
+
+
+def test_provider_identifier_is_trimmed_without_changing_case():
+    value = ProviderValue(provider="  CrossRef  ", value="Title")
+
+    assert value.provider == "CrossRef"
+
+
+def test_flat_provider_timestamp_is_propagated():
+    timestamp = "2026-01-02T03:04:05Z"
+    merged = FusionEngine().merge(
+        None,
+        {"provider": "crossref", "timestamp": timestamp, "title": "Title"},
+    )
+
+    assert merged["_record"]["title"]["values"][0]["timestamp"] == timestamp
+
+
+@pytest.mark.parametrize(
+    ("timestamp", "expected"),
+    [
+        ("2026-01-02T03:04:05Z", "2026-01-02T03:04:05Z"),
+        ("2026-01-02T04:04:05+01:00", "2026-01-02T03:04:05Z"),
+        ("2026-01-02T03:04:05", "2026-01-02T03:04:05Z"),
+    ],
+)
+def test_provider_value_normalizes_valid_timestamps_to_utc(timestamp, expected):
+    value = ProviderValue(provider="crossref", value="Title", timestamp=timestamp)
+
+    assert value.timestamp == expected
+
+
+def test_provider_value_rejects_malformed_timestamp():
+    with pytest.raises(InvalidProviderValueTimestampError):
+        ProviderValue(provider="crossref", value="Title", timestamp="not-a-date")
+
+
+def test_empty_timestamp_generates_canonical_utc_timestamp():
+    value = ProviderValue(provider="crossref", value="Title", timestamp="  ")
+
+    assert value.timestamp.endswith("Z")
+    assert "+00:00" not in value.timestamp
+
+
+def test_serialization_reload_preserves_canonical_utc_timestamp():
+    value = ProviderValue(
+        provider="crossref",
+        value="Title",
+        timestamp="2026-01-02T04:04:05+01:00",
+    )
+
+    reloaded = ProviderValue.from_dict(value.to_dict())
+
+    assert reloaded.timestamp == value.timestamp == "2026-01-02T03:04:05Z"
+
+
+def test_flat_provider_without_timestamp_uses_generated_default():
+    merged = FusionEngine().merge(None, {"provider": "crossref", "title": "Title"})
+
+    timestamp = merged["_record"]["title"]["values"][0]["timestamp"]
+    assert timestamp.endswith("Z")
+
+
+def test_flat_provider_quality_and_timestamp_are_propagated_together():
+    timestamp = "2026-01-02T03:04:05Z"
+    merged = FusionEngine().merge(
+        None,
+        {
+            "provider": "crossref",
+            "quality": 0.75,
+            "timestamp": timestamp,
+            "title": "Title",
+        },
+    )
+
+    observation = merged["_record"]["title"]["values"][0]
+    assert (observation["quality"], observation["timestamp"]) == (0.75, timestamp)
+
+
+def test_several_flat_providers_preserve_their_distinct_qualities():
+    merged = _fuse([
+        {"provider": "alpha", "quality": 0.2, "title": "Alpha"},
+        {"provider": "omega", "quality": 0.9, "title": "Omega"},
+    ])
+
+    assert {
+        value["provider"]: value["quality"]
+        for value in merged["_record"]["title"]["values"]
+    } == {"alpha": 0.2, "omega": 0.9}
+
+
+def test_flat_quality_survives_serialization_reload_and_merge():
+    engine = FusionEngine()
+    merged = engine.merge(
+        None, {"provider": "alpha", "quality": 0.4, "title": "Alpha"}
+    )
+    reloaded = engine.merge(
+        merged, {"provider": "omega", "quality": 0.8, "title": "Omega"}
+    )
+
+    assert [
+        value["quality"] for value in reloaded["_record"]["title"]["values"]
+    ] == [0.4, 0.8]
 
 
 def _field_with_observations(strategy, observations):
@@ -446,7 +583,7 @@ def test_equivalent_timestamp_spellings_are_order_independent(timestamps):
     )
 
     assert [value.timestamp for value in field.values] == [
-        "2025-01-01T00:00:00+00:00",
+        "2025-01-01T00:00:00Z",
         "2025-01-01T00:00:00Z",
     ]
     assert [value.current for value in field.values] == [False, True]
@@ -486,20 +623,3 @@ def test_exact_duplicate_observations_have_one_deterministic_current():
             "current": True,
         },
     ]
-
-
-@pytest.mark.parametrize(
-    "timestamps",
-    [("not-a-date", "also-not-a-date"), ("also-not-a-date", "not-a-date")],
-)
-def test_malformed_timestamps_are_order_independent(timestamps):
-    field = _field_with_observations(
-        "first_non_empty",
-        [(timestamp, timestamp) for timestamp in timestamps],
-    )
-
-    assert [value.timestamp for value in field.values] == [
-        "also-not-a-date",
-        "not-a-date",
-    ]
-    assert field.selected == "not-a-date"

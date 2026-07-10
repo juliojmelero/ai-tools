@@ -83,3 +83,33 @@ def test_search_all_clusters_then_fuses_every_record_before_ranking():
     assert shared["_providers"] == ["crossref", "openalex", "scopus"]
     assert result["raw_count"] == 4
     assert result["duplicates_removed"] == 2
+
+
+def test_search_all_injects_response_provider_without_overwriting_item_provider():
+    provider_results = [
+        {"doi": "10.1000/envelope", "title": "Envelope provider"},
+        {
+            "provider": "item-provider",
+            "doi": "10.1000/item",
+            "title": "Item provider",
+        },
+    ]
+    engine = SearchEngine.__new__(SearchEngine)
+    engine.deduplicator = Deduplicator()
+    engine.fusion = FusionEngine()
+    engine.ranker = type(
+        "PassThroughRanker",
+        (),
+        {"rank": staticmethod(lambda publications, sort_mode: publications)},
+    )()
+    engine.search = lambda provider, **kwargs: {
+        "provider": "envelope-provider",
+        "planned_query": kwargs["query"],
+        "results": provider_results,
+    }
+
+    result = engine.search_all(query="publication", providers=["requested-provider"])
+
+    by_doi = {publication["doi"]: publication for publication in result["results"]}
+    assert by_doi["10.1000/envelope"]["_providers"] == ["envelope-provider"]
+    assert by_doi["10.1000/item"]["_providers"] == ["item-provider"]
