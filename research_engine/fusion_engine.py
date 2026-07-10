@@ -57,6 +57,9 @@ class FusionEngine:
         for p in existing.get("_providers", []) if existing else []:
             providers.add(p)
 
+        for p in new.get("_providers", []):
+            providers.add(p)
+
         if existing and existing.get("provider"):
             providers.add(existing["provider"])
 
