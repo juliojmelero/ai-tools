@@ -50,7 +50,7 @@ def test_serialized_record_preserves_provenance_quality_and_timestamps():
 
     serialized = engine._publication_to_flat_dict(publication)
     serialized["_providers"] = ["crossref"]
-    serialized["_record"] = publication.to_dict()
+    serialized.update(publication.to_dict())
 
     merged_second = engine.merge(
         serialized,

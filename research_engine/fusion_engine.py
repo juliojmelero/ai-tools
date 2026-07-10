@@ -7,7 +7,11 @@ class FusionEngine:
 
     def _dict_to_publication(self, data):
         if "_record" in data:
-            return Publication.from_dict(data["_record"])
+            if "_schema_version" not in data:
+                # Cached canonical records written before schema versioning
+                # contain the V1 record body but no explicit envelope version.
+                data = {"_schema_version": 1, "_record": data["_record"]}
+            return Publication.from_dict(data)
 
         pub = Publication()
 
@@ -61,6 +65,6 @@ class FusionEngine:
 
         flat["_providers"] = sorted(p for p in providers if p)
 
-        flat["_record"] = pub.to_dict()
+        flat.update(pub.to_dict())
 
         return flat

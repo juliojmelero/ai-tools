@@ -54,22 +54,15 @@ class Publication:
         return self.fields[field_name].selected_provider()
 
     def to_dict(self):
-        return {
-            field: value.to_dict()
-            for field, value in self.fields.items()
-        }
+        from research_models.serialization import serialize_publication
+
+        return serialize_publication(self)
 
     @classmethod
     def from_dict(cls, data):
-        obj = cls()
-        for field_name, field_data in data.items():
-            if field_name not in FIELD_RULES:
-                raise UnknownPublicationFieldError(
-                    f"Unknown canonical publication field: {field_name!r}"
-                )
-            obj.fields[field_name] = FieldValue.from_dict(field_data)
-            obj.fields[field_name].reselect(providers_for_field(field_name))
-        return obj
+        from research_models.serialization import deserialize_publication
+
+        return deserialize_publication(data, cls)
 
 
 def publications_response(provider, query, publications):
