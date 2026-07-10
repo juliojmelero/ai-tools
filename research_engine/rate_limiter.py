@@ -126,7 +126,48 @@ class RateLimiterRegistry:
         self._sleeper = sleeper
         self._max_sleep_seconds = max_sleep_seconds
         self._limiters: dict[str, TokenBucketRateLimiter] = {}
+        self._cooldown_expires_at: dict[str, float] = {}
         self._lock = Lock()
+
+    def apply_cooldown(self, provider_id: str, seconds: float) -> None:
+        """Extend a provider's process-local cooldown using monotonic time."""
+        if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
+            raise TypeError("cooldown seconds must be a number")
+        if not isfinite(seconds) or seconds < 0:
+            raise ValueError("cooldown seconds must be finite and non-negative")
+        expires_at = self._clock() + float(seconds)
+        with self._lock:
+            self._cooldown_expires_at[provider_id] = max(
+                expires_at,
+                self._cooldown_expires_at.get(provider_id, expires_at),
+            )
+
+    def wait_for_cooldown(
+        self,
+        provider_id: str,
+        deadline: ProviderDeadline,
+        terminal_state: Event,
+    ) -> bool:
+        """Wait without acquiring or consuming a token-bucket token."""
+        while True:
+            if terminal_state.is_set():
+                return False
+            now = self._clock()
+            with self._lock:
+                cooldown_expiry = self._cooldown_expires_at.get(provider_id, 0.0)
+                if cooldown_expiry <= now:
+                    self._cooldown_expires_at.pop(provider_id, None)
+                    return True
+            if now >= deadline.expires_at:
+                return False
+            wait_seconds = min(
+                cooldown_expiry - now,
+                deadline.expires_at - now,
+                self._max_sleep_seconds,
+            )
+            if wait_seconds <= 0:
+                return False
+            self._sleeper(wait_seconds)
 
     def get(
         self,
