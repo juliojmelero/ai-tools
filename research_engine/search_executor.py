@@ -303,6 +303,11 @@ class SearchExecutor:
                 request.provider_id,
                 rate_limit_policy,
             )
+            if not self._rate_limiter_registry.wait_for_cooldown(
+                request.provider_id, request.deadline, state
+            ):
+                state.time_out(self._clock(), self._timeout_error(request))
+                return self._outcome_from_state(request, state, started)
             if limiter is not None and not limiter.acquire(request.deadline, state):
                 state.time_out(self._clock(), self._timeout_error(request))
                 return self._outcome_from_state(request, state, started)
@@ -339,10 +344,19 @@ class SearchExecutor:
                     return self._outcome_from_state(request, state, started)
                 decision = self._error_classifier.classify(exc, retry_policy)
                 can_retry = decision.retryable and attempt_number < retry_policy.max_attempts
-                backoff = self._backoff(attempt_number) if can_retry else None
+                backoff = None
+                if can_retry:
+                    backoff = max(
+                        self._backoff(attempt_number),
+                        decision.retry_after_seconds or 0.0,
+                    )
+                if decision.retryable and decision.retry_after_seconds is not None:
+                    self._rate_limiter_registry.apply_cooldown(
+                        request.provider_id, decision.retry_after_seconds
+                    )
                 if backoff is not None and not self._retry_fits(request, backoff):
                     state.complete_failure(
-                        self._clock(), decision.error, None, terminal=False
+                        self._clock(), decision.error, backoff, terminal=False
                     )
                     state.time_out(self._clock(), self._timeout_error(request))
                     return self._outcome_from_state(request, state, started)
