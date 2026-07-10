@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from dataclasses import asdict, dataclass
 from enum import Enum
+from types import MappingProxyType
 from typing import Any
+
+from research_engine.rate_limiter import RateLimitPolicy
 
 
 SUPPORTED_SORT_MODES = frozenset({
@@ -151,6 +154,8 @@ class ExecutionPolicy:
     overall_timeout: float | None = None
     max_workers: int = 8
     retry_policy: RetryPolicy = RetryPolicy()
+    default_rate_limit_policy: RateLimitPolicy | None = None
+    provider_rate_limit_policies: Mapping[str, RateLimitPolicy] | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -174,6 +179,22 @@ class ExecutionPolicy:
             raise ValueError("max_workers must be greater than 0")
         if not isinstance(self.retry_policy, RetryPolicy):
             raise TypeError("retry_policy must be a RetryPolicy")
+        if (
+            self.default_rate_limit_policy is not None
+            and not isinstance(self.default_rate_limit_policy, RateLimitPolicy)
+        ):
+            raise TypeError("default_rate_limit_policy must be a RateLimitPolicy")
+        policies = dict(self.provider_rate_limit_policies or {})
+        for provider_id, policy in policies.items():
+            if not isinstance(provider_id, str) or not provider_id.strip():
+                raise ValueError("rate limit policy provider IDs must be non-blank strings")
+            if not isinstance(policy, RateLimitPolicy):
+                raise TypeError("provider rate limit policies must be RateLimitPolicy values")
+        object.__setattr__(
+            self,
+            "provider_rate_limit_policies",
+            MappingProxyType(policies),
+        )
 
 
 @dataclass(frozen=True, slots=True)

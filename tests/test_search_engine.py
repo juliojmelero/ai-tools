@@ -45,6 +45,7 @@ class FakeProviderManager:
 
 class RecordingExecutor(SearchExecutor):
     def __init__(self):
+        super().__init__()
         self.batches = []
 
     def execute(self, requests):
