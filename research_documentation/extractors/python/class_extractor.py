@@ -20,6 +20,7 @@ class ClassExtractor:
         tree: ast.Module,
         file: Path,
         model: SoftwareModel,
+        package_name: str = "",
     ) -> None:
 
         module = file.stem
@@ -32,6 +33,8 @@ class ClassExtractor:
             software_class = SoftwareClass(
                 name=node.name,
                 module=module,
+                package=package_name,
+                package_name=package_name,
             )
 
             software_class.bases = [
