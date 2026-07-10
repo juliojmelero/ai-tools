@@ -1,6 +1,7 @@
 from research_engine.provider_manager import ProviderManager
 from research_engine.provider_registry import get_provider, list_providers
 from research_engine.deduplicator import Deduplicator
+from research_engine.fusion_engine import FusionEngine
 from research_engine.ranking import Ranker
 from research_engine.query_planner import QueryPlanner
 
@@ -10,6 +11,7 @@ class SearchEngine:
     def __init__(self):
         self.pm = ProviderManager()
         self.deduplicator = Deduplicator()
+        self.fusion = FusionEngine()
         self.ranker = Ranker()
         self.query_planner = QueryPlanner()
 
@@ -87,8 +89,16 @@ class SearchEngine:
             except Exception as e:
                 errors[provider_id] = str(e)
 
-        deduplicated = self.deduplicator.deduplicate(raw_results)
-        ranked = self.ranker.rank(deduplicated, sort_mode=sort_mode)
+        clusters = self.deduplicator.cluster(raw_results)
+        fused = []
+
+        for records in clusters.values():
+            publication = None
+            for record in records:
+                publication = self.fusion.merge(publication, record)
+            fused.append(publication)
+
+        ranked = self.ranker.rank(fused, sort_mode=sort_mode)
 
         return {
             "query": query,
@@ -96,7 +106,7 @@ class SearchEngine:
             "providers": selected,
             "sort_mode": sort_mode,
             "raw_count": len(raw_results),
-            "duplicates_removed": len(raw_results) - len(deduplicated),
+            "duplicates_removed": len(raw_results) - len(clusters),
             "count": min(len(ranked), max_results),
             "errors": errors,
             "results": ranked[:max_results],
