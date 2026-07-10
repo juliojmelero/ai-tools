@@ -107,7 +107,7 @@ class SearchEngine:
             failed_providers=failed,
             timed_out_providers=timed_out,
             cancelled_providers=cancelled,
-            partial=bool(successful and (failed or timed_out or cancelled)),
+            partial=bool(timed_out or (successful and (failed or cancelled))),
             raw_count=len(raw_records),
             final_count=len(publications),
             sort_mode=request.sort_mode,

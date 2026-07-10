@@ -86,6 +86,41 @@ class ProviderExecutionError:
 
 
 @dataclass(frozen=True, slots=True)
+class ExecutionPolicy:
+    default_provider_timeout: float = 30.0
+    overall_timeout: float | None = None
+    max_workers: int = 8
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.default_provider_timeout, bool)
+            or not isinstance(self.default_provider_timeout, (int, float))
+            or self.default_provider_timeout <= 0
+        ):
+            raise ValueError("default_provider_timeout must be greater than 0")
+        if (
+            self.overall_timeout is not None
+            and (
+                isinstance(self.overall_timeout, bool)
+                or not isinstance(self.overall_timeout, (int, float))
+                or self.overall_timeout <= 0
+            )
+        ):
+            raise ValueError("overall_timeout must be greater than 0 when provided")
+        if isinstance(self.max_workers, bool) or not isinstance(self.max_workers, int):
+            raise TypeError("max_workers must be an integer")
+        if self.max_workers <= 0:
+            raise ValueError("max_workers must be greater than 0")
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderDeadline:
+    timeout_seconds: float
+    expires_at: float
+    limited_by_overall_timeout: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ProviderRequest:
     provider_id: str
     original_query: str
@@ -96,6 +131,7 @@ class ProviderRequest:
     ordinal: int
     provider: Any | None = None
     preparation_error: ProviderExecutionError | None = None
+    deadline: ProviderDeadline | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +145,7 @@ class ProviderOutcome:
     elapsed_ms: int
     error: ProviderExecutionError | None
     ordinal: int
+    deadline: ProviderDeadline | None = None
 
     @property
     def successful(self) -> bool:
