@@ -8,6 +8,7 @@ from time import monotonic, sleep
 from typing import Any, Callable
 
 from research_engine.error_classifier import ErrorClassifier
+from research_engine.metrics import MetricsCollector, NullMetricsCollector
 from research_engine.rate_limiter import (
     RateLimiterRegistry,
     get_rate_limiter_registry,
@@ -153,6 +154,7 @@ class SearchExecutor:
         error_classifier: ErrorClassifier | None = None,
         rate_limiter_registry: RateLimiterRegistry | None = None,
         executor_pool: SearchExecutorPool | None = None,
+        metrics: MetricsCollector | NullMetricsCollector | None = None,
     ):
         if policy is not None and max_workers is not None:
             raise TypeError("provide either policy or max_workers, not both")
@@ -178,6 +180,7 @@ class SearchExecutor:
         ):
             raise TypeError("executor_pool must be a SearchExecutorPool")
         self._executor_pool = executor_pool or get_search_executor_pool()
+        self._metrics = metrics if metrics is not None else NullMetricsCollector()
 
     @property
     def max_workers(self) -> int:
@@ -250,7 +253,9 @@ class SearchExecutor:
                 )
                 pending.remove(future)
 
-        return tuple(outcomes[request.ordinal] for request in prepared)
+        ordered_outcomes = tuple(outcomes[request.ordinal] for request in prepared)
+        self._record_outcomes(ordered_outcomes)
+        return ordered_outcomes
 
     def _deadline(
         self,
@@ -321,6 +326,9 @@ class SearchExecutor:
                 state.time_out(now, self._timeout_error(request))
                 return self._outcome_from_state(request, state, started)
             try:
+                self._metrics.increment("provider_requests")
+                if attempt_number > 1:
+                    self._metrics.increment("retries")
                 response = request.provider.search(
                     query=request.planned_query,
                     max_results=request.max_results,
@@ -515,3 +523,14 @@ class SearchExecutor:
             deadline=request.deadline,
             attempts=attempts,
         )
+
+    def _record_outcomes(self, outcomes: tuple[ProviderOutcome, ...]) -> None:
+        for outcome in outcomes:
+            if outcome.status is ProviderStatus.SUCCESS:
+                self._metrics.increment("provider_successes")
+                if outcome.attempt_count > 1:
+                    self._metrics.increment("retry_successes")
+            elif outcome.status is ProviderStatus.FAILED:
+                self._metrics.increment("provider_failures")
+            elif outcome.status is ProviderStatus.TIMED_OUT:
+                self._metrics.increment("provider_timeouts")

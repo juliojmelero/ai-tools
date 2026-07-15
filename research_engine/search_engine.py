@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from time import monotonic
 from types import MappingProxyType
 
 from research_engine.deduplicator import Deduplicator
 from research_engine.fusion_engine import FusionEngine
+from research_engine.metrics import MetricsCollector, NullMetricsCollector
 from research_engine.provider_manager import ProviderManager
 from research_engine.provider_registry import get_registry
 from research_engine.query_cache import CacheKey, QueryCache
@@ -34,15 +36,17 @@ class SearchEngine:
         deduplicator=None,
         fusion_engine: FusionEngine | None = None,
         ranker=None,
+        metrics: MetricsCollector | NullMetricsCollector | None = None,
     ):
+        self._metrics = metrics if metrics is not None else NullMetricsCollector()
         self.pm = provider_manager or ProviderManager()
         self.registry = provider_registry or get_registry()
         self.query_planner = query_planner or QueryPlanner()
-        self.executor = executor or SearchExecutor()
+        self.executor = executor or SearchExecutor(metrics=self._metrics)
         self.deduplicator = deduplicator or Deduplicator()
         self.fusion_engine = fusion_engine or FusionEngine()
         self.ranker = ranker or Ranker()
-        self.cache = QueryCache()
+        self.cache = QueryCache(metrics=self._metrics)
 
     def search(
         self,
@@ -52,6 +56,24 @@ class SearchEngine:
         from_year: int | None = None,
         until_year: int | None = None,
         sort_mode: str = "relevance",
+    ) -> SearchResult:
+        started = monotonic()
+        self._metrics.increment("searches")
+        try:
+            return self._search(
+                query, providers, max_results, from_year, until_year, sort_mode
+            )
+        finally:
+            self._metrics.observe("search_duration_seconds", monotonic() - started)
+
+    def _search(
+        self,
+        query: str,
+        providers: Sequence[str] | None,
+        max_results: int,
+        from_year: int | None,
+        until_year: int | None,
+        sort_mode: str,
     ) -> SearchResult:
         request = SearchRequest(
             query=query,
@@ -72,6 +94,7 @@ class SearchEngine:
         )
         cached = self.cache.get(cache_key)
         if cached is not None:
+            self._record_result(cached, include_publications=False)
             return cached
 
         provider_requests = tuple(
@@ -131,7 +154,18 @@ class SearchEngine:
         )
         if not result.partial:
             self.cache.set(cache_key, result)
+        self._record_result(result, include_publications=True)
         return result
+
+    def _record_result(self, result: SearchResult, *, include_publications: bool) -> None:
+        if result.partial:
+            self._metrics.increment("partial_searches")
+        else:
+            self._metrics.increment("completed_searches")
+        if include_publications:
+            self._metrics.increment("raw_publications", result.raw_count)
+            self._metrics.increment("fused_publications", result.final_count)
+            self._metrics.increment("duplicates_removed", result.duplicates_removed)
 
     def search_all(
         self,
