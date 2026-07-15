@@ -1,4 +1,7 @@
 import json
+
+from research_engine.query_cache import _increment_configuration_version
+
 from .db import get_conn
 
 
@@ -53,6 +56,7 @@ def upsert_provider(data: dict):
         ))
         conn.commit()
 
+    _increment_configuration_version()
     return get_provider(data["id"])
 
 
@@ -60,4 +64,5 @@ def delete_provider(provider_id: str):
     with get_conn() as conn:
         conn.execute("DELETE FROM providers WHERE id = ?", (provider_id,))
         conn.commit()
+    _increment_configuration_version()
     return {"deleted": provider_id}

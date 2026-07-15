@@ -11,6 +11,7 @@ from time import monotonic
 from types import MappingProxyType
 from typing import Callable
 
+from research_engine.metrics import MetricsCollector, NullMetricsCollector
 from research_engine.search_models import SearchResult
 
 
@@ -73,6 +74,7 @@ class QueryCache:
         ttl_seconds: float = 300.0,
         *,
         clock: Callable[[], float] = monotonic,
+        metrics: MetricsCollector | NullMetricsCollector | None = None,
     ) -> None:
         if isinstance(max_entries, bool) or not isinstance(max_entries, int):
             raise TypeError("max_entries must be an integer")
@@ -93,17 +95,22 @@ class QueryCache:
         self._clock = clock
         self._entries: OrderedDict[CacheKey, _CacheEntry] = OrderedDict()
         self._lock = RLock()
+        self._metrics = metrics if metrics is not None else NullMetricsCollector()
 
     def get(self, key: CacheKey) -> SearchResult | None:
         """Return a live value and mark it as most recently used."""
         with self._lock:
             entry = self._entries.get(key)
             if entry is None:
+                self._metrics.increment("cache_misses")
                 return None
             if self._clock() >= entry.expires_at:
                 del self._entries[key]
+                self._metrics.increment("cache_expirations")
+                self._metrics.increment("cache_misses")
                 return None
             self._entries.move_to_end(key)
+            self._metrics.increment("cache_hits")
             return self._copy_result(entry.result)
 
     def set(self, key: CacheKey, result: SearchResult) -> None:
@@ -115,9 +122,11 @@ class QueryCache:
                 result=self._copy_result(result),
                 expires_at=self._clock() + self.ttl_seconds,
             )
+            self._metrics.increment("cache_insertions")
             self._entries.move_to_end(key)
             while len(self._entries) > self.max_entries:
                 self._entries.popitem(last=False)
+                self._metrics.increment("cache_evictions")
 
     @staticmethod
     def _is_complete_success(result: SearchResult) -> bool:
