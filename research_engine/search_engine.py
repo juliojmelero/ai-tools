@@ -8,6 +8,7 @@ from research_engine.deduplicator import Deduplicator
 from research_engine.fusion_engine import FusionEngine
 from research_engine.provider_manager import ProviderManager
 from research_engine.provider_registry import get_registry
+from research_engine.query_cache import CacheKey, QueryCache
 from research_engine.query_planner import QueryPlanner
 from research_engine.ranking import Ranker
 from research_engine.search_executor import SearchExecutor
@@ -41,6 +42,7 @@ class SearchEngine:
         self.deduplicator = deduplicator or Deduplicator()
         self.fusion_engine = fusion_engine or FusionEngine()
         self.ranker = ranker or Ranker()
+        self.cache = QueryCache()
 
     def search(
         self,
@@ -60,6 +62,18 @@ class SearchEngine:
             sort_mode=sort_mode,
         )
         selected = self._select_providers(request)
+        cache_key = CacheKey(
+            query=request.query,
+            providers=selected,
+            max_results=request.max_results,
+            from_year=request.from_year,
+            until_year=request.until_year,
+            sort_mode=request.sort_mode,
+        )
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         provider_requests = tuple(
             self._prepare_provider_request(request, provider_id, ordinal)
             for ordinal, provider_id in enumerate(selected)
@@ -98,7 +112,7 @@ class SearchEngine:
             for outcome in outcomes
         })
 
-        return SearchResult(
+        result = SearchResult(
             query=request.query,
             providers=selected,
             publications=publications,
@@ -115,6 +129,9 @@ class SearchEngine:
             planned_queries=planned_queries,
             duplicates_removed=len(raw_records) - len(clusters),
         )
+        if not result.partial:
+            self.cache.set(cache_key, result)
+        return result
 
     def search_all(
         self,

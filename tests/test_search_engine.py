@@ -5,8 +5,9 @@ from collections import OrderedDict
 import pytest
 
 from research_engine.search_engine import SearchEngine
+from research_engine.query_cache import QueryCache
 from research_engine.search_executor import SearchExecutor
-from research_engine.search_models import ProviderStatus, SearchResult
+from research_engine.search_models import ProviderOutcome, ProviderStatus, SearchResult
 
 
 class FakeProvider:
@@ -51,6 +52,28 @@ class RecordingExecutor(SearchExecutor):
     def execute(self, requests):
         self.batches.append(tuple(requests))
         return super().execute(requests)
+
+
+class TimedOutExecutor:
+    def __init__(self):
+        self.calls = 0
+
+    def execute(self, requests):
+        self.calls += 1
+        return tuple(
+            ProviderOutcome(
+                provider_id=request.provider_id,
+                status=ProviderStatus.TIMED_OUT,
+                original_query=request.original_query,
+                planned_query=request.planned_query,
+                records=(),
+                attempt_count=0,
+                elapsed_ms=0,
+                error=None,
+                ordinal=request.ordinal,
+            )
+            for request in requests
+        )
 
 
 def record(title, **values):
@@ -205,10 +228,14 @@ def test_all_providers_fail_without_raising():
     })
 
     result = engine.search(query="topic", providers=["one", "two"])
+    repeat = engine.search(query="topic", providers=["one", "two"])
 
     assert result.publications == ()
     assert result.failed_providers == ("one", "two")
     assert result.partial is False
+    assert repeat.failed_providers == ("one", "two")
+    assert len(engine.registry.providers["one"].calls) == 2
+    assert len(engine.registry.providers["two"].calls) == 2
 
 
 def test_empty_result_is_successful():
@@ -218,6 +245,65 @@ def test_empty_result_is_successful():
 
     assert result.successful_providers == ("empty",)
     assert result.raw_count == 0
+
+
+def test_complete_search_result_is_cached_after_the_full_pipeline():
+    provider = FakeProvider({
+        "results": [
+            record("second", citations=1),
+            record("first", citations=2),
+        ]
+    })
+    engine = make_engine({"crossref": provider})
+    engine.cache = QueryCache(max_entries=2, ttl_seconds=60)
+
+    first = engine.search(query="topic", providers=["crossref"], sort_mode="citations")
+    second = engine.search(query="topic", providers=["crossref"], sort_mode="citations")
+
+    assert len(provider.calls) == 1
+    assert second is not first
+    assert [publication["title"] for publication in second.publications] == [
+        "first", "second"
+    ]
+    assert second.to_dict() == first.to_dict()
+
+
+def test_timeout_results_are_not_cached():
+    executor = TimedOutExecutor()
+    engine = make_engine({"slow": FakeProvider()}, executor=executor)
+
+    first = engine.search(query="topic", providers=["slow"])
+    second = engine.search(query="topic", providers=["slow"])
+
+    assert first.partial is True
+    assert second.partial is True
+    assert executor.calls == 2
+
+
+def test_partial_results_are_never_cached():
+    good = FakeProvider({"results": [record("kept")]})
+    bad = FakeProvider(error=RuntimeError("down"))
+    engine = make_engine({"good": good, "bad": bad})
+
+    first = engine.search(query="topic", providers=["good", "bad"])
+    second = engine.search(query="topic", providers=["good", "bad"])
+
+    assert first.partial is True
+    assert second.partial is True
+    assert len(good.calls) == 2
+    assert len(bad.calls) == 2
+
+
+def test_cache_key_includes_effective_selected_provider_order():
+    first = FakeProvider({"results": [record("first")]})
+    second = FakeProvider({"results": [record("second")]})
+    engine = make_engine({"first": first, "second": second})
+
+    engine.search(query="topic", providers=["first", "second"])
+    engine.search(query="topic", providers=["second", "first"])
+
+    assert len(first.calls) == 2
+    assert len(second.calls) == 2
 
 
 @pytest.mark.parametrize("response", [None, {}, {"results": {}}, {"results": ["bad"]}])
